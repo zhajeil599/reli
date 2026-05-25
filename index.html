@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侧边导航栏</title>
+<style>
+  /* 基础设置与页面布局 */
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh; /* 撑满全屏高度 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5; /* 右侧留白区域的背景色，用于区分边界 */
+  }
+
+  /* 左侧导航栏主容器 */
+  .sidebar {
+    width: 240px;
+    background-color: #031224; /* 深蓝色背景，贴合原图 */
+    color: #ffffff; /* 默认文字颜色 */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* 内容过多时允许滚动 */
+  }
+
+  /* LOGO 样式 */
+  .logo {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: #ffffff;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin-top: 10px;
+  }
+
+  /* 菜单列表清除默认样式 */
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* 一级菜单项 */
+  .menu-item {
+    padding: 14px 24px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  /* 悬浮效果 */
+  .menu-item:hover, .submenu-item:hover {
+    color: #1890ff; 
+  }
+
+  /* 展开的父级菜单状态 (例如：埋点分析) */
+  .menu-item.active-parent {
+    color: #2b7afc; /* 亮蓝色文字 */
+  }
+
+  /* 子菜单容器 */
+  .submenu {
+    background-color: #031224;
+  }
+
+  /* 子菜单项 */
+  .submenu-item {
+    padding: 14px 24px 14px 50px; /* 增加左侧内边距实现缩进效果 */
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  /* 当前激活的子菜单项 (例如：热力图分析) */
+  .submenu-item.active {
+    background-color: #2e3541; /* 深灰色选中背景 */
+    color: #2b7afc; /* 亮蓝色文字 */
+  }
+
+  /* 右侧的 V 型箭头 */
+  .chevron::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg); /* 默认向下指 */
+    transition: transform 0.3s;
+    margin-right: 4px;
+  }
+
+  /* 当父菜单展开时，箭头向上指 */
+  .active-parent .chevron::before {
+    transform: rotate(-135deg); 
+  }
+
+  /* 右侧主要内容区域 (留白) */
+  .main-content {
+    flex: 1; /* 占据剩余的所有宽度 */
+    background-color: #ffffff; 
+  }
+
+  /* 美化侧边栏的滚动条 (仅 Webkit 内核浏览器有效) */
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+        /* --- 以下是新增的右侧内容样式 --- */
+        
+        /* 重写 main-content 背景为图中的深色，用来做卡片间隔 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #171d28; /* 深灰蓝背景 */
+            overflow: hidden;
+        }
+
+        /* 卡片1：顶部导航 */
+        .top-header {
+            height: 56px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-left .icon {
+            color: #909399;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #303133;
+        }
+
+        .header-right .user-avatar {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #c0c4cc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #606266;
+            cursor: pointer;
+        }
+
+        /* 包含卡片2的区域 */
+        .content-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        /* 卡片2：控制面板 */
+        .control-panel {
+            background-color: #ffffff;
+            border-radius: 2px;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative; /* 为了让中间的切换按钮绝对居中 */
+        }
+
+        .panel-left {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .info-icon {
+            margin-right: 8px;
+        }
+
+        .label {
+            color: #909399;
+            margin-right: 12px;
+        }
+
+        /* 颜色徽章 */
+        .badge {
+            padding: 3px 10px;
+            border-radius: 2px;
+            color: #fff;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        .badge-blue { background-color: #3e88ff; } /* 图中蓝色 */
+        .badge-orange { background-color: #ffaa33; } /* 图中橙色 */
+        .badge-red { background-color: #ff5b69; } /* 图中粉红 */
+
+        /* 居中切换按钮组 */
+        .panel-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .toggle-group {
+            display: flex;
+            background-color: #f3f5f8;
+            border-radius: 20px;
+            padding: 4px;
+        }
+
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            padding: 6px 20px;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #606266;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn svg {
+            margin-right: 6px;
+        }
+
+        .toggle-btn.active {
+            background-color: #5a8dff; /* 激活时的蓝色背景 */
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(90, 141, 255, 0.3); /* 模拟设计稿的微弱投影 */
+        }
+
+        .panel-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .setting-icon {
+            color: #303133;
+            cursor: pointer;
+        }
+
+        /* --- 卡片3 样式 --- */
+        
+        .data-card {
+            background-color: #ffffff;
+            border-radius: 2px;
+            margin-top: 16px; /* 与上面的控制面板卡片拉开间距 */
+            padding: 16px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 添加极轻微的阴影增加质感 */
+        }
+
+        .data-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* border-bottom: 1px solid #f0f2f5; 如果下面还有内容，可以把这行注释解开当分割线 */
+            padding-bottom: 8px;
+        }
+
+        /* 品牌 Logo 区域 */
+        .brand-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .brand-name {
+            color: #2fa4fe; /* 与原图相似的亮蓝色 */
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .brand-sub {
+            color: #8cb9f5;
+            font-size: 10px;
+            margin-top: 2px;
+            transform: scale(0.9); /* 稍微缩小英文字体 */
+            transform-origin: left top;
+        }
+
+        /* 按钮组 */
+        .nav-tabs {
+            display: flex;
+            gap: 8px; /* 按钮之间的间距 */
+            flex: 1; /* 占据中间剩余空间 */
+            margin-left: 40px; /* 距离左侧Logo一段距离 */
+            flex-wrap: wrap; /* 如果屏幕不够宽允许换行 */
+        }
+
+        .tab-btn {
+            padding: 6px 16px;
+            background-color: #eef2f9; /* 浅灰偏蓝背景 */
+            color: #303133;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background-color: #e1e7f3;
+        }
+
+        .tab-btn.active {
+            background-color: #2fa4fe; /* 选中状态的亮蓝色 */
+            color: #ffffff;
+        }
+
+        /* 右侧数据统计 */
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* 所有文字靠右对齐 */
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 6px;
+        }
+
+        .stat-item {
+            font-size: 12px;
+            color: #909399; /* 灰色标签 */
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-value {
+            color: #606266; /* 较深的数字 */
+            margin: 0 4px;
+        }
+
+        .stat-up {
+            color: #f56c6c; /* 红色的上涨箭头和数字 */
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .time-stamp {
+            font-size: 12px;
+            color: #a8abb2; /* 浅灰色时间戳 */
+        }
+                /* --- 卡片3 主体与左侧区域样式 --- */
+                
+                .data-card-body {
+                    display: flex;
+                    margin-top: 16px;
+                    border-top: 1px solid #f0f2f5;
+                    padding-top: 16px;
+                    align-items: stretch;
+                }
+
+                .panel-left-sidebar {
+                    width: 200px;
+                    flex-shrink: 0;
+                    border: 1px solid #e4e7ed;
+                    background-color: #eaedf1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .sidebar-search {
+                    padding: 8px;
+                    background-color: #eaedf1;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .sidebar-search input {
+                    flex: 1;
+                    height: 28px;
+                    border: none;
+                    background-color: #eaedf1;
+                    color: #909399;
+                    font-size: 12px;
+                    outline: none;
+                    padding: 0 8px;
+                }
+
+                .sidebar-search input::placeholder {
+                    color: #b0b4bc;
+                }
+
+                .search-icon-box {
+                    width: 14px;
+                    height: 14px;
+                    background-color: #909399;
+                    margin-right: 4px;
+                }
+
+                .sidebar-user-box {
+                    background-color: #f5f7fa;
+                    border: 1px solid #e1e7f3;
+                    margin: 0 4px 8px 4px;
+                    padding: 10px;
+                    border-radius: 4px;
+                }
+
+                .user-greeting {
+                    font-size: 12px;
+                    color: #606266;
+                    margin-bottom: 4px;
+                }
+
+                .user-assets {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .user-assets .balance {
+                    color: #2fa4fe;
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+
+                .refresh-btn {
+                    margin-left: auto;
+                    border: none;
+                    background-color: #dcdfe6;
+                    color: #606266;
+                    padding: 2px 6px;
+                    border-radius: 2px;
+                    font-size: 11px;
+                    cursor: pointer;
+                }
+
+                .sidebar-menu-list {
+                    flex: 1;
+                    background-color: #ffffff;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .side-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 10px 12px;
+                    font-size: 13px;
+                    color: #303133;
+                    background-color: #eaedf1;
+                    border-bottom: 1px solid #ffffff;
+                    cursor: pointer;
+                }
+
+                .side-item .icon {
+                    margin-right: 8px;
+                    font-size: 14px;
+                }
+
+                .side-item.active {
+                    background-color: #eaf3ff;
+                    color: #2fa4fe;
+                    border-right: 3px solid #2fa4fe;
+                }
+
+                .side-title {
+                    padding: 12px;
+                    font-size: 12px;
+                    color: #606266;
+                    background-color: #ffffff;
+                }
+
+                .side-item.has-count {
+                    justify-content: space-between;
+                }
+
+                .side-item.has-count .count {
+                    color: #606266;
+                    font-size: 12px;
+                }
+
+                .side-tabs {
+                    display: flex;
+                    justify-content: center;
+                    background-color: #f5f7fa;
+                    padding: 10px;
+                    gap: 10px;
+                }
+
+                .side-tab {
+                    padding: 4px 20px;
+                    font-size: 12px;
+                    color: #909399;
+                    background-color: #ffffff;
+                    border: 1px solid #e4e7ed;
+                    border-radius: 12px;
+                    cursor: pointer;
+                }
+
+                .side-tab.active {
+                    color: #606266;
+                    border-color: #dcdfe6;
+                    background-color: #ffffff;
+                }
+
+                .panel-middle-content {
+                    flex: 1;
+                    background-color: #fafafa;
+                    border: 1px dashed #dcdfe6;
+                    margin-left: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #909399;
+                    font-size: 14px;
+                }
+
+                .panel-right-content {
+                    width: 250px;
+                    background-color: #fafafa;
+                    border: 1px dashed #dcdfe6;
+                    margin-left: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #909399;
+                    font-size: 14px;
+                }
+
+/* --- 自动覆盖之前右侧预留的虚线框样式 --- */
+  .data-card-body .panel-right-content {
+    width: 440px; /* 给定一个合适的宽度 */
+    flex-shrink: 0;
+    margin-left: 16px;
+    background-color: transparent !important;
+    border: none !important;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 卡片之间的间距 */
+    justify-content: flex-start;
+  }
+  
+  /* 右侧独立样式 */
+  .right-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+    background-color: #e8ebf0; /* 浅灰色背景，贴合原图 */
+    color: #606266;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .action-btn:hover {
+    background-color: #dcdfe6;
+  }
+
+  /* 视频控制台卡片 */
+  .video-control-card {
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #e4e7ed; /* 浅灰描边 */
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 行间距 */
+  }
+
+  .control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .control-row.justify-end {
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .btn-group-left {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap; /* 空间不够自动换行 */
+  }
+
+  /* 视频区域模拟 */
+  .video-placeholder {
+    height: 220px;
+    background-color: #303133; /* 模拟视频背景色 */
+    border-radius: 4px;
+    position: relative; /* 为了定位右下角按钮 */
+    margin: 4px 0;
+    overflow: hidden;
+  }
+
+  /* 悬浮在视频上的按钮组 */
+  .video-overlay-btns {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .overlay-btn {
+    background-color: rgba(255, 255, 255, 0.85); /* 半透明白色背景 */
+    color: #303133;
+  }
+
+  /* 迷你投注列表卡片 */
+  .mini-bet-card {
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #e4e7ed;
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .mini-bet-placeholder {
+    flex: 1;
+    height: 120px;
+    background-color: #e8ebf0; /* 大块浅灰占位 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #303133;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+  }
+
+  .mini-bet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+/* --- 补丁2：强制上下两个卡片（视频区和迷你列表）宽度完全一致且对齐 --- */
+  .video-control-card, 
+  .mini-bet-card {
+    width: 100% !important;
+    box-sizing: border-box !important; /* 让内边距算在总宽度内，确保边缘绝对对齐 */
+  }
+
+/* --- 覆盖替换：最新附件版本左侧导航栏样式 --- */
+  .sidebar { width: 240px; background-color: #0b1528 !important; color: #a6b5cc; display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.15); overflow-y: auto; }
+  .logo-container { padding: 20px; background-color: #060d1a; display: flex; align-items: center; border-bottom: 1px solid #132238; margin-top: 0; }
+  .logo-icon { width: 32px; height: 32px; background-color: #3b82f6; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+  .logo-text { color: white; font-weight: 600; font-size: 16px; }
+  .menu-list { list-style: none; flex: 1; padding: 12px 0; margin: 0; }
+  .menu-item { padding: 12px 20px; display: flex; align-items: center; cursor: pointer; transition: all 0.2s ease; font-size: 14px; position: relative; background-color: transparent; border: none; justify-content: flex-start; }
+  .menu-item:hover { background-color: #132238; color: white; }
+  .menu-item.active { background-color: #1d2d44; color: #3b82f6; font-weight: 500; }
+  .menu-item.has-submenu::after { content: '▼'; position: absolute; right: 20px; font-size: 10px; transition: transform 0.2s; }
+  .menu-item.has-submenu.open::after { transform: rotate(180deg); }
+  .submenu-list { list-style: none; background-color: #070e1b; padding: 4px 0; display: none; margin: 0; }
+  .submenu-list.show { display: block; }
+  .submenu-item { padding: 10px 20px 10px 45px; font-size: 13px; cursor: pointer; transition: all 0.2s ease; color: #8fa0ba; background-color: transparent; }
+  .submenu-item:hover { color: white; background-color: #1e3a8a; }
+  .submenu-item.active { background-color: #102a45 !important; color: #3b82f6 !important; border-right: 3px solid #3b82f6; }
+  .menu-icon { margin-right: 10px; width: 16px; text-align: center; }
+
+/* --- 覆盖并重构中间区域样式 --- */
+  .data-card-body .panel-middle-content {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px solid #e4e7ed !important; /* 覆盖虚线 */
+    margin-left: 16px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important; /* 取消居中对齐，让内容铺满 */
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    overflow-y: auto;
+  }
+
+  .mid-announcement {
+    background-color: #d1d5db;
+    color: #6b7280;
+    text-align: center;
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .mid-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .mid-title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #1f2937;
+    margin-right: 16px;
+    white-space: nowrap;
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pill {
+    padding: 4px 12px;
+    background-color: #e5e7eb;
+    color: #4b5563;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .pill-red { background-color: #fb7185; color: white; }
+  .pill-blue { background-color: #3b82f6; color: white; }
+  .pill-orange { background-color: #fbbf24; color: white; }
+
+  .header-blue-row {
+    justify-content: space-between;
+    background-color: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .blue-title {
+    color: #3b82f6;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .control-bar {
+    justify-content: space-between;
+    background-color: #ffffff;
+  }
+
+  /* 核心数据块布局 */
+  .mid-main-blocks {
+    display: flex;
+    padding: 10px 12px;
+    gap: 12px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .blocks-grid {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+  }
+
+  .block-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #1f2937;
+    height: 240px; /* 控制色块的高度 */
+    border-radius: 2px;
+    text-align: center;
+  }
+
+  .block-large {
+    flex: 2; /* 第一个块比其他的宽两倍 */
+  }
+
+  .bg-lightgray { background-color: #e5e7eb; }
+  .bg-red { background-color: #fb7185; color: white; font-size: 20px;}
+  .bg-blue { background-color: #3b82f6; color: white; font-size: 20px;}
+  .bg-orange { background-color: #fbbf24; color: white; font-size: 20px;}
+
+  .blocks-side-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 80px;
+  }
+
+  .blocks-side-btns .action-btn {
+    width: 100%;
+    padding: 6px 0;
+  }
+
+  .bottom-tags {
+    gap: 6px;
+    flex-wrap: wrap;
+    border-bottom: none;
+  }
+  
+/* --- 更新：调整左栏和中栏的滚动机制，实现顶部固定 --- */
+  /* 让外层容器本身不滚动，改为内部弹性布局 */
+  .panel-left-sidebar,
+  .panel-middle-content {
+      overflow: hidden !important; /* 禁止外层整体滚动 */
+      display: flex !important;
+      flex-direction: column !important;
+      max-height: calc(100vh - 220px);
+  }
+
+  /* 右栏保持不变，依旧整体滚动 */
+  .panel-right-content {
+      overflow-y: auto !important;
+      max-height: calc(100vh - 220px);
+  }
+
+  /* 新增：左栏和中栏专属的内部独立滚动区域 */
+  .sidebar-menu-scroll-part,
+  .mid-content-scroll-part {
+      flex: 1;
+      overflow-y: auto !important; /* 仅让这一层出现滚动条 */
+  }
+
+  /* 美化滚动条 (仅对需要滚动的区域生效) */
+  .sidebar-menu-scroll-part::-webkit-scrollbar,
+  .mid-content-scroll-part::-webkit-scrollbar,
+  .panel-right-content::-webkit-scrollbar {
+      width: 6px;
+  }
+  .sidebar-menu-scroll-part::-webkit-scrollbar-thumb,
+  .mid-content-scroll-part::-webkit-scrollbar-thumb,
+  .panel-right-content::-webkit-scrollbar-thumb {
+      background-color: #dcdfe6;
+      border-radius: 3px;
+  }
+
+  /* 中栏区块统一间距优化 */
+  .sport-section {
+      background-color: #ffffff;
+      border: 1px solid #e4e7ed;
+      margin-bottom: 12px;
+      border-radius: 4px;
+      padding-bottom: 8px;
+  }
+  .sport-section .mid-row.control-bar {
+      border-bottom: 1px solid #f3f4f6;
+      padding: 8px 12px;
+  }
+  .sport-section .mid-main-blocks {
+      border-bottom: none;
+      padding-bottom: 0;
+  }
+  .bg-lightgray-new { 
+      background-color: #e8ebf0; 
+      color: #303133; 
+  }
+
+/* --- 新增：【专业】和【全部】的专属选中状态样式 --- */
+  .pill-active {
+      background-color: #eaf3ff !important;
+      color: #2fa4fe !important;
+      border: 1px solid #2fa4fe !important;
+  }
+
+/* --- 1. 新版热力图动效与逻辑控制 (已排除PC/H5切换按钮) --- */
+  @keyframes heatFlash { 
+      0% { opacity: 0.15; } 
+      100% { opacity: 0.85; } 
+  }
+  
+  .action-btn, .pill, .block-cell, .tab-btn, .side-item, 
+  .refresh-btn, .sidebar-search, 
+  .mid-announcement, .mini-bet-placeholder, .side-tab {
+      position: relative; overflow: hidden; 
+  }
+
+  /* 基础遮罩：动画绝对同步呼吸 */
+  .action-btn::after, .pill::after, .block-cell::after, .tab-btn::after, 
+  .side-item::after, .refresh-btn::after, .sidebar-search::after, 
+  .mid-announcement::after, .mini-bet-placeholder::after, .side-tab::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 5; pointer-events: none; border-radius: inherit; display: none;
+      animation: heatFlash 2.5s infinite alternate ease-in-out;
+  }
+
+  body.show-heat-red :is(.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab):nth-child(4n+1)::after {
+      display: block; background-color: rgba(255, 91, 105, 0.45); 
+  }
+  body.show-heat-orange :is(.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab):nth-child(4n+2)::after {
+      display: block; background-color: rgba(255, 170, 51, 0.45); 
+  }
+  body.show-heat-blue :is(.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab):nth-child(4n+3)::after {
+      display: block; background-color: rgba(62, 136, 255, 0.45); 
+  }
+
+  /* --- 占比视图百分比文字标签样式 --- */
+  body.show-heat-percent :is(.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab)::before {
+      content: attr(data-percent); 
+      position: absolute; top: 2px; right: 4px;
+      font-size: 10px; font-weight: bold; z-index: 6; pointer-events: none;
+      background-color: rgba(11, 29, 56, 0.6); /* 半透明深蓝色背景 */
+      color: #ffffff; /* 白色文字 */
+      border: none; /* 去掉边框 */
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+  }
+
+  /* --- 2. 抽屉 UI (贴合最新截图) --- */
+  .heatmap-drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+  .heatmap-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+  .heatmap-drawer { position: fixed; top: 0; right: -360px; width: 340px; height: 100%; background: #ffffff; box-shadow: -2px 0 8px rgba(0,0,0,0.1); z-index: 2001; display: flex; flex-direction: column; transition: right 0.3s ease-out; }
+  .heatmap-drawer.open { right: 0; }
+  
+  /* 抽屉头部 */
+  .drawer-header { padding: 16px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .drawer-header-left { display: flex; align-items: center; gap: 8px; }
+  .drawer-close { cursor: pointer; color: #909399; font-size: 18px; }
+  .drawer-title { font-size: 16px; font-weight: bold; color: #303133; }
+  .drawer-export { color: #b37feb; background: #f9f0ff; border: 1px solid #d3adf7; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;}
+  
+  /* 表单项 */
+  .drawer-content { flex: 1; padding: 16px; overflow-y: auto; }
+  .form-group { margin-bottom: 20px; }
+  .form-label { font-size: 13px; color: #606266; margin-bottom: 8px; display: block; }
+  .form-select { width: 100%; height: 32px; padding: 0 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; color: #606266; outline: none; background: #fff; appearance: auto; }
+  
+  /* 按钮组 (网格布局) */
+  .grid-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-btn { padding: 6px 0; text-align: center; background: #f0f2f5; color: #606266; border-radius: 4px; font-size: 13px; cursor: pointer; border: none; transition: 0.2s; }
+  .grid-btn.active { background: #5a8dff; color: #fff; }
+  
+  /* 占比切换与卡片 */
+  .tier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .tier-toggle-group { display: flex; border: 1px solid #dcdfe6; border-radius: 2px; overflow: hidden; }
+  .tier-toggle { padding: 4px 12px; font-size: 12px; cursor: pointer; background: #fff; color: #909399; }
+  .tier-toggle.active { background: #5a8dff; color: #fff; border-color: #5a8dff; }
+  
+  .heat-cards { display: flex; gap: 10px; justify-content: space-between; }
+  .heat-card { flex: 1; height: 90px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; padding: 8px; cursor: pointer; position: relative; border: 2px solid transparent; background: #f5f7fa;}
+  .heat-card.red { border-color: #ff5b69; background: rgba(255,91,105,0.05); }
+  .heat-card.orange { border-color: #ffaa33; background: rgba(255,170,51,0.05); }
+  .heat-card.blue { border-color: #3e88ff; background: rgba(62,136,255,0.05); }
+  
+  .heat-card-inner { flex: 1; width: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; margin-top: 24px;}
+  .heat-card.red .heat-card-inner { background: #ff5b69; }
+  .heat-card.orange .heat-card-inner { background: #ffaa33; }
+  .heat-card.blue .heat-card-inner { background: #3e88ff; }
+  
+  /* 原型里的自定义复选框 */
+  .heat-card-checkbox { position: absolute; top: 8px; left: 8px; width: 16px; height: 16px; border: 1px solid #dcdfe6; border-radius: 2px; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .heat-card.active .heat-card-checkbox { background: #5a8dff; border-color: #5a8dff; }
+  .heat-card.active .heat-card-checkbox::after { content: '✓'; color: #fff; font-size: 12px; }
+  
+  /* 占比视图警告横幅 */
+  .percent-warning { background: #fff8e6; border: 1px solid #ffe58f; padding: 12px; border-radius: 4px; color: #d48806; font-size: 12px; text-align: center; display: none; margin-top: 10px;}
+  
+  /* 底部确认 */
+  .drawer-footer { padding: 16px; border-top: 1px solid #f0f0f0; }
+  .btn-submit { width: 100%; padding: 10px; background: #5a8dff; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
+  /* 抽屉底部按钮区域 */
+  .drawer-footer {
+      padding: 12px 16px; border-top: 1px solid #f0f0f0;
+      display: flex; gap: 12px;
+  }
+  .drawer-btn-primary {
+      flex: 1; padding: 10px; background-color: #1890ff; color: #ffffff;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 13px;
+      transition: background-color 0.2s;
+  }
+  .drawer-btn-primary:hover { background-color: #40a9ff; }
+  
+  .drawer-btn-secondary {
+      flex: 1; padding: 10px; background-color: #ffffff; color: #606266;
+      border: 1px solid #dcdfe6; border-radius: 4px; cursor: pointer; font-size: 13px;
+      transition: all 0.2s;
+  }
+  .drawer-btn-secondary:hover { border-color: #1890ff; color: #1890ff; }
+
+/* --- 优化：占比视图百分比文字样式强化 --- */
+  body.show-heat-percent :is(.action-btn, .pill, .block-cell, .tab-btn, .side-item, .toggle-btn, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab)::before {
+      background-color: rgba(11, 29, 56, 0.6) !important; /* 半透明深蓝色背景 (0.6表示60%不透明度) */
+      color: #ffffff !important; /* 白色文字 */
+      border: none !important; /* 去掉边框 */
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important; /* 阴影也稍微调柔和一点 */
+  }
+
+  /* --- 新增：悬停 3 秒出现的数据详情卡片 --- */
+  .heatmap-tooltip {
+      position: absolute; width: 340px; background: #ffffff; border: 1px solid #e4e7ed;
+      border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 9999;
+      display: none; flex-direction: column; font-family: sans-serif;
+      pointer-events: none; /* 让鼠标穿透，防止闪烁 */
+  }
+  .heatmap-tooltip.show { display: flex; }
+  .tt-header { padding: 12px 16px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center;}
+  .tt-title { font-size: 15px; font-weight: bold; color: #303133; }
+  .tt-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; color: #fff; font-weight: bold;}
+  .tt-badge.red { background-color: #ff5b69; }
+  .tt-badge.orange { background-color: #ffaa33; }
+  .tt-badge.blue { background-color: #3e88ff; }
+  .tt-body { padding: 16px; }
+  .tt-data-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #606266;}
+  .tt-summary { background: #f5f7fa; padding: 10px; border-radius: 4px; font-size: 12px; color: #909399; margin: 12px 0;}
+  .tt-progress-bg { height: 6px; background: #e4e7ed; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .tt-progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s ease-in-out; }
+  
+  /* 迷你趋势图表区 */
+  .tt-chart-area { margin-top: 16px; border-top: 1px dashed #e4e7ed; padding-top: 12px; }
+  .tt-chart-tabs { display: flex; justify-content: space-between; font-size: 12px; color: #909399; margin-bottom: 12px;}
+  .tt-chart-tab-group span { cursor: pointer; margin-right: 12px; transition: color 0.2s;}
+  .tt-chart-tab-group span.active { color: #5a8dff; font-weight: bold; }
+  .tt-chart-mock { height: 80px; background: repeating-linear-gradient(90deg, transparent, transparent 30px, #f5f7fa 30px, #f5f7fa 60px); border-bottom: 1px solid #dcdfe6; position: relative; border-left: 1px solid #dcdfe6;}
+  .tt-mock-bar { position: absolute; bottom: 0; width: 12px; background: #5a8dff; border-radius: 2px 2px 0 0; opacity: 0.8;}
+
+  /* --- 新增：自定义时间选择器真实弹窗 --- */
+  .date-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center;}
+  .date-modal-overlay.show { display: flex; }
+  .date-modal { width: 560px; background: #fff; border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); overflow: hidden; }
+  .date-modal-header { padding: 16px 20px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; color:#303133;}
+  .date-modal-close { cursor: pointer; color: #909399; font-size: 20px; line-height: 1;}
+  .date-modal-close:hover { color: #f56c6c; }
+  .date-modal-body { padding: 20px; display: flex; gap: 20px; height: 300px;}
+  .date-modal-left { width: 120px; border-right: 1px solid #f0f2f5; display: flex; flex-direction: column; gap: 8px; padding-right: 12px;}
+  .date-shortcut { font-size: 13px; color: #606266; cursor: pointer; padding: 8px 12px; border-radius: 4px; transition: 0.2s;}
+  .date-shortcut:hover, .date-shortcut.active { background: #f0f5ff; color: #5a8dff; font-weight: bold;}
+  .date-modal-right { flex: 1; display: flex; flex-direction: column;}
+  .date-inputs { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .date-inputs input { flex: 1; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; outline: none; color: #606266;}
+  .date-inputs input:focus { border-color: #5a8dff; }
+  .date-calendar-mock { flex: 1; background: #f5f7fa; border: 1px dashed #dcdfe6; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #909399; font-size: 13px; }
+  .date-modal-footer { padding: 12px 20px; border-top: 1px solid #f0f2f5; display: flex; justify-content: flex-end; gap: 12px;}
+  .btn-hollow { padding: 8px 20px; background: #fff; border: 1px solid #dcdfe6; border-radius: 4px; color: #606266; cursor: pointer;}
+  .btn-solid { padding: 8px 20px; background: #5a8dff; border: none; border-radius: 4px; color: #fff; cursor: pointer;}
+
+</style>
+</head>
+<body class="heatmap-on">
+
+    <div class="sidebar">
+      <div class="logo-container">
+          <div class="logo-icon">Ω</div>
+          <div class="logo-text">运维管理系统</div>
+      </div>
+      <ul class="menu-list">
+          <li class="menu-item"><span class="menu-icon">⚽</span>体育看板</li>
+          <li class="menu-item"><span class="menu-icon">🎮</span>电竞看板</li>
+          <li class="menu-item"><span class="menu-icon">🎬</span>电竞看板（新）</li>
+          <li class="menu-item"><span class="menu-icon">🎰</span>彩票看板</li>
+          <li class="menu-item"><span class="menu-icon">📈</span>运营看板</li>
+          <li class="menu-item"><span class="menu-icon">🗄️</span>数据商看板</li>
+          <li class="menu-item"><span class="menu-icon">👥</span>在线人数看板</li>
+          
+          <li class="menu-item has-submenu"><span class="menu-icon">💻</span>客户端性能看板</li>
+          <ul class="submenu-list">
+              <li class="submenu-item">总览看板</li>
+              <li class="submenu-item">区域 - 分钟级性能分析表</li>
+              <li class="submenu-item">区域加载异常比例</li>
+              <li class="submenu-item">各区域总加载时长分布</li>
+          </ul>
+          
+          <li class="menu-item"><span class="menu-icon">📊</span>操盘KPI看板</li>
+          <li class="menu-item"><span class="menu-icon">📋</span>体育报表</li>
+          <li class="menu-item"><span class="menu-icon">📑</span>电竞报表</li>
+          <li class="menu-item"><span class="menu-icon">💵</span>对账报表</li>
+          <li class="menu-item"><span class="menu-icon">⚙️</span>系统管理</li>
+          <li class="menu-item"><span class="menu-icon">📅</span>任务中心</li>
+          
+          <li class="menu-item has-submenu open active"><span class="menu-icon">📍</span>埋点分析</li>
+          <ul class="submenu-list show">
+              <li class="submenu-item">事件分析</li>
+              <li class="submenu-item">看板</li>
+              <li class="submenu-item active">热力图分析</li>
+          </ul>
+          
+          <li class="menu-item"><span class="menu-icon">🔍</span>商户/用户异常查询</li>
+      </ul>
+    </div>
+
+    <div class="main-content">
+                
+        <div class="top-header">
+                <div class="header-left">
+                    <svg class="icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                    <span class="page-title">热力图分析</span>
+                </div>
+                <div class="header-right">
+                    <div class="user-avatar">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                </div>
+        </div>
+
+        <div class="content-body">
+                
+                <div class="control-panel">
+                    
+                    <div class="panel-left">
+                        <svg class="info-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="#5293ff" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                        <span class="label">点击率颜色:</span>
+                        <span class="badge badge-blue">0.5%-10%</span>
+                        <span class="badge badge-orange">10%-50%</span>
+                        <span class="badge badge-red">>50%</span>
+                    </div>
+                    
+                    <div class="panel-center">
+                        <div class="toggle-group">
+                            <div class="toggle-btn active">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+                            PC热力图
+                            </div>
+                            <div class="toggle-btn">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+                            H5热力图
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-right">
+                        <div id="openSettingsDrawer" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; transition: background 0.2s;" title="打开筛选设置">
+                            <svg viewBox="0 0 24 24" width="20" height="20" style="color: #606266;"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                
+            <div class="data-card">
+                <div class="data-card-header">
+                    
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 100 40" width="80" height="32" style="margin-right: 8px;">
+                        <path d="M20,20 C10,10 30,0 40,20 C30,30 10,40 20,20 Z" fill="#2fa4fe" opacity="0.8"/>
+                        <circle cx="25" cy="20" r="10" fill="#00e5ff" opacity="0.6"/>
+                        <circle cx="25" cy="20" r="6" fill="#fff"/>
+                        <path d="M5,35 Q20,15 45,35" stroke="#2fa4fe" stroke-width="2" fill="none"/>
+                        <path d="M10,38 Q25,20 50,38" stroke="#00e5ff" stroke-width="2" fill="none"/>
+                        </svg>
+                        <div class="brand-text">
+                        <div class="brand-name">熊猫体育</div>
+                        <div class="brand-sub">PANDA SPORTS</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-tabs">
+                        <div class="tab-btn active">体育投注</div>
+                        <div class="tab-btn">电子竞技</div>
+                        <div class="tab-btn">VR体育</div>
+                        <div class="tab-btn">注单历史</div>
+                        <div class="tab-btn">赛果</div>
+                        <div class="tab-btn">体育竞猜规则</div>
+                        <div class="tab-btn">合买大厅</div>
+                    </div>
+
+                    <div class="stats-container">
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">总点击次数:</span>
+                                <span class="stat-value">1,245</span>
+                                <span class="stat-up">▲ + 1.2 %</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">总点击人数:</span>
+                                <span class="stat-value">1,245</span>
+                                <span class="stat-up">▲ + 1.2 %</span>
+                            </div>
+                        </div>
+                        <div class="time-stamp">18:51:03 (GMT+8)</div>
+                    </div>
+            
+                </div>            
+            
+                <div class="data-card-body">
+                                    
+                    <div class="panel-left-sidebar">
+                                            
+                        <div class="sidebar-search">
+                            <input type="text" placeholder="请输入联赛名或球队名">
+                            <div class="search-icon-box"></div>
+                        </div>
+
+                        <div class="sidebar-user-box">
+                            <div class="user-greeting">Hi , Nilaile001_try2Y</div>
+                            <div class="user-assets">
+                                <span class="balance">6,214,487.41</span>
+                                <svg viewBox="0 0 24 24" width="14" height="14" style="margin-left:4px; color:#606266; cursor:pointer;"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                <button class="refresh-btn">刷新</button>
+                            </div>
+                        </div>
+
+                        <div class="side-item" style="background-color: #eaedf1; border-bottom: 1px solid #ffffff;"><span class="icon">📜</span> 投注记录</div>
+
+                        <div class="sidebar-menu-scroll-part">
+                            <div class="side-item active"><span class="icon">⚽</span> 滚球赛事</div>
+                            <div class="side-item"><span class="icon">🔥</span> 热门赛事</div>
+                                        
+                            <div class="side-title" style="background-color: #ffffff;">体育菜单</div>
+                                        
+                            <div class="side-item"><span class="icon">🏆</span> 五大联赛</div>
+                            <div class="side-item"><span class="icon">🏀</span> NBA</div>
+                                        
+                            <div class="side-tabs">
+                                <div class="side-tab active">今日</div>
+                                <div class="side-tab">早盘</div>
+                            </div>
+
+                            <div class="side-item"><span class="icon">⚽</span> 足球</div>
+                            <div class="side-item"><span class="icon">🏀</span> 篮球</div>
+                            <div class="side-item"><span class="icon">🎲</span> 真人娱乐</div>
+                            <div class="side-item"><span class="icon">🎮</span> 电子竞技</div>
+                            <div class="side-item"><span class="icon">🎱</span> 彩票投注</div>
+                            <div class="side-item"><span class="icon">🎾</span> 网球</div>
+                            <div class="side-item"><span class="icon">🎱</span> 斯诺克</div>
+                            <div class="side-item"><span class="icon">🏸</span> 羽毛球</div>
+                            <div class="side-item"><span class="icon">🏓</span> 乒乓球</div>
+                            <div class="side-item"><span class="icon">🏒</span> 冰球</div>
+                            <div class="side-item"><span class="icon">🏐</span> 排球</div>
+                            <div class="side-item"><span class="icon">⚾</span> 棒球</div>
+                            <div class="side-item"><span class="icon">🏈</span> 美式足球</div>
+                            <div class="side-item"><span class="icon">🏖️</span> 沙滩排球</div>
+                            <div class="side-item"><span class="icon">🏖️</span> 冠军</div>            
+                            <div class="side-item"><span class="icon">🔽</span> VR体育</div>
+                        </div>
+
+                    </div>
+
+                    <div class="panel-middle-content">
+            
+                        <div class="mid-announcement">公告</div>
+
+                        <div class="mid-row filter-row-1">
+                            <div class="mid-title">滚球盘</div>
+                            <div class="filter-pills">
+                                <span class="pill">近期开赛（全部）</span>
+                                <span class="pill">选择联赛（全部）</span>
+                                <span class="pill">香港盘</span>
+                                <span class="pill pill-active">专业</span>
+                                <span class="pill">新手</span>
+                                <span class="pill">热门</span>
+                                <span class="pill">时间</span>
+                                <span class="pill">简译</span>
+                                <span class="pill">繁译</span>
+                                <span class="pill">日间</span>
+                                <span class="pill">夜间</span>
+                                <span class="pill">刷新</span>
+                            </div>
+                        </div>
+
+                        <div class="mid-row filter-row-2">
+                            <span class="pill pill-active"><span class="icon">🌐</span> 全部</span>
+                            <span class="pill"><span class="icon">⭐</span> 收藏</span>
+                            <span class="pill"><span class="icon">⚽</span> 足球</span>
+                            <span class="pill"><span class="icon">🏀</span> 篮球</span>
+                            <span class="pill"><span class="icon">🛡️</span> 英雄联盟</span>
+                            <span class="pill"><span class="icon">⚔️</span> DOTA2</span>
+                            <span class="pill"><span class="icon">🎾</span> 网球</span>
+                            <span class="pill"><span class="icon">🏸</span> 羽毛球</span>
+                            <span class="pill"><span class="icon">🏐</span> 排球</span>
+                            <span class="pill"><span class="icon">🏏</span> 板球</span>
+                        </div>
+
+                        <div class="mid-row header-blue-row" style="margin-bottom: 12px;">
+                            <div class="blue-title">足球</div>
+                            <div class="btn-group">
+                                <button class="action-btn">展开</button>
+                                <button class="action-btn">收起</button>
+                            </div>
+                        </div>
+
+                        <div class="mid-content-scroll-part">
+                
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray block-large">足球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray">全场独赢</div>
+                                        <div class="block-cell bg-lightgray">全场让球</div>
+                                        <div class="block-cell bg-lightgray">全场大小</div>
+                                        <div class="block-cell bg-lightgray">半场独赢</div>
+                                        <div class="block-cell bg-lightgray">半场让球</div>
+                                        <div class="block-cell bg-lightgray">半场大小</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mid-row bottom-tags" style="padding-top: 8px; padding-left: 12px;">
+                                    <button class="action-btn">展开</button>
+                                    <button class="action-btn">收起</button>
+                                    <button class="action-btn">晋级</button>
+                                    <button class="action-btn">冠军</button>
+                                    <button class="action-btn">角球</button>
+                                    <button class="action-btn">15分钟</button>
+                                    <button class="action-btn">5分钟</button>
+                                    <button class="action-btn">波胆</button>
+                                    <button class="action-btn">特色组合</button>
+                                    <button class="action-btn">罚牌</button>
+                                    <button class="action-btn">加时进球</button>
+                                    <button class="action-btn">加时罚牌</button>
+                                    <button class="action-btn">加时波胆</button>
+                                    <button class="action-btn">点球大战</button>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">篮球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">让分</div>
+                                        <div class="block-cell bg-lightgray-new">总分</div>
+                                        <div class="block-cell bg-lightgray-new">球队总分</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">电子竞技-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全局获胜</div>
+                                        <div class="block-cell bg-lightgray-new">地图让分</div>
+                                        <div class="block-cell bg-lightgray-new">地图总数</div>
+                                        <div class="block-cell bg-lightgray-new">单局获胜</div>
+                                        <div class="block-cell bg-lightgray-new">单局击杀-让分</div>
+                                        <div class="block-cell bg-lightgray-new">单局击杀-总数</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">电子篮球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">全场让球</div>
+                                        <div class="block-cell bg-lightgray-new">全场大小</div>
+                                        <div class="block-cell bg-lightgray-new">半场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">半场让球</div>
+                                        <div class="block-cell bg-lightgray-new">半场大小</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">网球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">独赢</div>
+                                        <div class="block-cell bg-lightgray-new">让盘</div>
+                                        <div class="block-cell bg-lightgray-new">让局</div>
+                                        <div class="block-cell bg-lightgray-new">总局数</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">羽毛球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">全场让分</div>
+                                        <div class="block-cell bg-lightgray-new">全场总分</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">乒乓球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">全场让分</div>
+                                        <div class="block-cell bg-lightgray-new">全场总分</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">棒球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">独赢</div>
+                                        <div class="block-cell bg-lightgray-new">让球</div>
+                                        <div class="block-cell bg-lightgray-new">大小</div>
+                                        <div class="block-cell bg-lightgray-new">单/双</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sport-section">
+                                <div class="mid-row control-bar">
+                                    <div class="btn-group">
+                                        <button class="action-btn">展开</button>
+                                        <button class="action-btn">收起</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="action-btn">置顶联赛</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏联赛</button>
+                                        <button class="action-btn">取消收藏</button>
+                                    </div>
+                                </div>
+                                <div class="mid-main-blocks">
+                                    <div class="blocks-grid">
+                                        <div class="block-cell bg-lightgray-new block-large">板球-赛事详情</div>
+                                        <div class="block-cell bg-lightgray-new">全场独赢</div>
+                                        <div class="block-cell bg-lightgray-new">独赢两项</div>
+                                        <div class="block-cell bg-lightgray-new">赢得掷币</div>
+                                        <div class="block-cell bg-lightgray-new">全局让分</div>
+                                        <div class="block-cell bg-lightgray-new">球队全局-总分</div>
+                                    </div>
+                                    <div class="blocks-side-btns">
+                                        <button class="action-btn">置顶赛事</button>
+                                        <button class="action-btn">取消置顶</button>
+                                        <button class="action-btn">收藏赛事</button>
+                                        <button class="action-btn">取消收藏</button>
+                                        <button class="action-btn">比分板</button>
+                                        <button class="action-btn">源视频</button>
+                                        <button class="action-btn">动画直播</button>
+                                        <button class="action-btn">赛事分析</button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div> 
+                    </div>
+
+                    <div class="panel-right-content">
+                
+                        <div class="right-top-bar">
+                        <button class="action-btn">简体中文</button>
+                        <button class="action-btn">设置</button>
+                        </div>
+
+                        <div class="video-control-card">
+                        
+                        <div class="control-row">
+                    <div class="btn-group-left">
+                    <button class="action-btn">展开</button>
+                    <button class="action-btn">收起</button>
+                    <button class="action-btn">比分板</button>
+                    <button class="action-btn">源视频</button>
+                    <button class="action-btn">动画直播</button>
+                    <button class="action-btn">提示信息</button>
+                    <button class="action-btn">刷新</button>
+                    </div>
+              </div>
+
+                    <div class="control-row justify-end" style="margin-top: 8px; margin-bottom: 8px;">
+                        <button class="action-btn">收起侧边栏</button>
+                    </div>
+              
+              <div class="control-row justify-end">
+                <button class="action-btn">赛事展开</button>
+                <button class="action-btn">赛事收起</button>
+              </div>
+
+                        <div class="video-placeholder">
+                            <div class="video-overlay-btns">
+                            <button class="action-btn overlay-btn">画中画</button>
+                            <button class="action-btn overlay-btn">大屏模式</button>
+                            <button class="action-btn overlay-btn">全屏模式</button>
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="btn-group-left">
+                            <button class="action-btn">投注</button>
+                            <button class="action-btn">赛事分析</button>
+                            </div>
+                            <button class="action-btn">所有玩法收起</button>
+                        </div>
+                        </div>
+
+                        <div class="mini-bet-card">
+                        <div class="mini-bet-placeholder">迷你投注列表</div>
+                        <div class="mini-bet-actions">
+                            <button class="action-btn">单玩法收起</button>
+                            <button class="action-btn">置顶</button>
+                        </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+<div class="heatmap-drawer-overlay" id="drawerOverlay"></div>
+    
+    <div class="heatmap-drawer" id="settingsDrawer">
+        <div class="drawer-header">
+            <div class="drawer-header-left">
+                <span class="drawer-close" id="closeDrawer">×</span>
+                <span class="drawer-title">热力图筛选</span>
+            </div>
+            <button class="drawer-export">
+                <svg viewBox="0 0 1024 1024" width="12" height="12" fill="currentColor"><path d="M512 736c-12.8 0-25.6-3.2-35.2-12.8L284.8 531.2c-19.2-19.2-19.2-51.2 0-70.4 19.2-19.2 51.2-19.2 70.4 0L464 569.6V160c0-25.6 22.4-48 48-48s48 22.4 48 48v409.6l108.8-108.8c19.2-19.2 51.2-19.2 70.4 0 19.2 19.2 19.2 51.2 0 70.4L547.2 723.2c-9.6 9.6-22.4 12.8-35.2 12.8zM864 912H160c-25.6 0-48-22.4-48-48s22.4-48 48-48h704c25.6 0 48 22.4 48 48s-22.4 48-48 48z"></path></svg>
+                导出数据
+            </button>
+        </div>
+        
+        <div class="drawer-content">
+            <div class="form-group">
+                <label class="form-label">商户</label>
+                <select class="form-select">
+                    <option>全部</option>
+                    <option>商户1</option>
+                    <option>商户2</option>
+                    <option>商户3</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">左侧菜单</label>
+                <div style="display: flex; gap: 8px;">
+                    <select class="form-select" id="menuLvl1">
+                        <option>今日</option>
+                        <option>早盘</option>
+                        <option>五大联赛</option>
+                        <option>NBA</option>
+                        <option>热门赛事</option>
+                        <option selected>滚球</option>
+                    </select>
+                    <select class="form-select" id="menuLvl2" style="display: none;">
+                        <option>足球</option><option>篮球</option><option>真人娱乐</option>
+                        <option>电子竞技</option><option>彩票投注</option><option>网球</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">时间</label>
+                <div class="grid-btn-group time-group">
+                    <button class="grid-btn">今日</button>
+                    <button class="grid-btn">昨日</button>
+                    <button class="grid-btn">近7日</button>
+                    <button class="grid-btn active" id="customTimeBtn">自定义</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">指标</label>
+                <div class="grid-btn-group metric-group">
+                    <button class="grid-btn active">点击次数</button>
+                    <button class="grid-btn">点击人数</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="tier-header">
+                    <label class="form-label" style="margin-bottom:0; font-weight:bold;">热力分布等级</label>
+                    <div class="tier-toggle-group">
+                        <div class="tier-toggle active" id="toggleHeat">热力等级</div>
+                        <div class="tier-toggle" id="togglePercent">占比</div>
+                    </div>
+                </div>
+                
+                <div class="heat-cards" id="heatCardsContainer">
+                    <div class="heat-card red active" data-color="red">
+                        <div class="heat-card-checkbox"></div>
+                        <div class="heat-card-inner">高热区</div>
+                    </div>
+                    <div class="heat-card orange active" data-color="orange">
+                        <div class="heat-card-checkbox"></div>
+                        <div class="heat-card-inner">中热区</div>
+                    </div>
+                    <div class="heat-card blue" data-color="blue">
+                        <div class="heat-card-checkbox"></div>
+                        <div class="heat-card-inner">低热区</div>
+                    </div>
+                </div>
+                
+                <div class="percent-warning" id="percentWarning">
+                    已切换为占比视图，热力等级不可选择
+                </div>
+            </div>
+        </div>
+        
+        <div class="drawer-footer">
+            <button class="btn-submit" id="applyFilters">确定</button>
+        </div>
+    </div>
+
+    <style>
+        /* 弹窗容器加宽至 800px */
+        .heatmap-tooltip { width: 800px !important; pointer-events: auto !important; border-radius: 12px !important; box-shadow: 0 12px 40px rgba(0,0,0,0.2) !important; }
+        .tt-close-btn { cursor: pointer; color: #909399; font-size: 32px; line-height: 1; transition: color 0.2s; padding: 0 8px; }
+        .tt-close-btn:hover { color: #f56c6c; }
+        
+        /* 悬浮黑色提示框放大 */
+        .chart-hover-tip { position: absolute; background: rgba(0,0,0,0.75); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 15px; pointer-events: none; display: none; transform: translate(-50%, -100%); margin-top: -12px; z-index: 10; white-space: nowrap; }
+        
+        /* 内部文字与间距等比例放大 */
+        .tt-header { padding: 20px 24px !important; }
+        .tt-title { font-size: 22px !important; }
+        .tt-badge { font-size: 14px !important; padding: 4px 12px !important; border-radius: 6px !important; }
+        .tt-body { padding: 24px !important; }
+        .tt-data-row { font-size: 18px !important; margin-bottom: 14px !important; }
+        .tt-summary { padding: 18px !important; font-size: 16px !important; margin: 24px 0 !important; border-radius: 6px !important; }
+        .tt-progress-bg { height: 10px !important; border-radius: 5px !important; margin-top: 14px !important; }
+        .tt-progress-bar { border-radius: 5px !important; }
+        .tt-chart-area { margin-top: 28px !important; padding-top: 24px !important; }
+        .tt-chart-tabs { font-size: 16px !important; margin-bottom: 24px !important; }
+    </style>
+    <div class="heatmap-tooltip" id="heatmapTooltip">
+        <div class="tt-header">
+            <div style="display:flex; align-items:center;">
+                <span class="tt-title" id="ttTitle">区块名称</span>
+                <span class="tt-badge red" id="ttBadge" style="margin-left:16px;">高热区</span>
+            </div>
+            <span class="tt-close-btn" id="ttCloseBtn" title="关闭">×</span>
+        </div>
+        <div class="tt-body">
+            <div class="tt-data-row"><span>今日点击数:</span> <span id="ttToday" style="font-weight:bold;">0</span></div>
+            <div class="tt-data-row"><span>昨日点击数:</span> <span id="ttYest" style="font-weight:bold;">0</span></div>
+            <div class="tt-data-row"><span style="color:#606266;"><span id="ttPeriodLabel">2026/05/25-2026/05/31</span> 点击数:</span> <span id="ttPeriod" style="font-weight:bold; color:#5a8dff;">0</span></div>
+            
+            <div class="tt-summary">
+                <div id="ttSummaryText">本区域为高热度区域，点击量占比0%。</div>
+                <div class="tt-progress-bg">
+                    <div class="tt-progress-bar" id="ttProgress"></div>
+                </div>
+            </div>
+            
+            <div class="tt-chart-area">
+                <div class="tt-chart-tabs">
+                    <div class="tt-chart-tab-group" id="chartTimeTabs">
+                        <span class="active">近7天</span><span>近30天</span>
+                    </div>
+                    <div class="tt-chart-tab-group" id="chartMetricTabs">
+                        <span class="active">点击量</span><span>点击占比</span>
+                    </div>
+                </div>
+                <div class="tt-chart-mock" id="chartContainer" style="padding-top: 25px; height: 200px; display:flex; align-items:flex-end; position:relative; overflow:visible;">
+                    <div class="chart-hover-tip" id="chartTip">数据: 0</div>
+                    <svg id="trendSvg" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .cal-container { flex: 1; display: flex; flex-direction: column; background: #fff; border: 1px solid #dcdfe6; border-radius: 4px; overflow: hidden; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0f2f5; font-size: 14px; font-weight: bold; color: #303133; }
+        .cal-btn { cursor: pointer; color: #909399; font-weight: bold; padding: 0 8px; user-select: none; transition: color 0.2s;}
+        .cal-btn:hover { color: #5a8dff; }
+        .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; color: #909399; padding: 8px 0; background: #f5f7fa; }
+        .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); padding: 8px; gap: 4px 0; flex: 1; align-content: start;}
+        .cal-day { display: flex; align-items: center; justify-content: center; height: 28px; font-size: 13px; cursor: pointer; color: #606266; position: relative; user-select: none;}
+        .cal-day span { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; position: relative; z-index: 2; transition: 0.2s;}
+        .cal-day:hover span { background: #f0f5ff; color: #5a8dff; }
+        .cal-day.disabled span { color: #c0c4cc; cursor: not-allowed; background: transparent; }
+        /* 选中状态 */
+        .cal-day.selected span { background: #5a8dff; color: #fff; font-weight: bold; }
+        .cal-day.in-range { background: #eaf3ff; } /* 中间浅蓝色 */
+    </style>
+    <div class="date-modal-overlay" id="datePickerModal">
+        <div class="date-modal">
+            <div class="date-modal-header">
+                <span>选择自定义时间</span>
+                <span class="date-modal-close" id="closeDateModal">×</span>
+            </div>
+            <div class="date-modal-body">
+                <div class="date-modal-left">
+                    <div class="date-shortcut" data-type="today">今日</div>
+                    <div class="date-shortcut" data-type="yesterday">昨日</div>
+                    <div class="date-shortcut active" data-type="thisWeek">本周</div>
+                    <div class="date-shortcut" data-type="lastWeek">上周</div>
+                    <div class="date-shortcut" data-type="thisMonth">本月</div>
+                    <div class="date-shortcut" data-type="lastMonth">上月</div>
+                </div>
+                <div class="date-modal-right">
+                    <div class="date-inputs">
+                        <input type="text" id="startDateInput" placeholder="开始日期" readonly>
+                        <span style="color:#909399;">至</span>
+                        <input type="text" id="endDateInput" placeholder="结束日期" readonly>
+                    </div>
+                    <div class="cal-container">
+                        <div class="cal-header">
+                            <span class="cal-btn" id="calPrevBtn">&lt;</span>
+                            <span id="calMonthLabel">2026年5月</span>
+                            <span class="cal-btn" id="calNextBtn">&gt;</span>
+                        </div>
+                        <div class="cal-weekdays">
+                            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                        </div>
+                        <div class="cal-days" id="calDaysGrid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="date-modal-footer">
+                <button class="btn-hollow" id="cancelDateBtn">取消</button>
+                <button class="btn-solid" id="confirmDateBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ================= 核心：全局假定今天是 2026年5月25日 =================
+            const MOCK_TODAY = new Date(2026, 4, 25); // 月份从0开始，4代表5月
+            
+            // ================= 1. 抽屉及菜单联动逻辑 =================
+            const drawer = document.getElementById('settingsDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            
+            document.getElementById('openSettingsDrawer').addEventListener('click', () => { drawer.classList.add('open'); overlay.classList.add('open'); });
+            const closeAll = () => { drawer.classList.remove('open'); overlay.classList.remove('open'); };
+            document.getElementById('closeDrawer').addEventListener('click', closeAll);
+            overlay.addEventListener('click', closeAll);
+            
+            const menuLvl1 = document.getElementById('menuLvl1');
+            const menuLvl2 = document.getElementById('menuLvl2');
+            menuLvl1.addEventListener('change', function() {
+                menuLvl2.style.display = (this.value === '今日' || this.value === '早盘') ? 'block' : 'none';
+            });
+
+            // ================= 2. 真实日历及时间段逻辑 =================
+            let currentRenderMonth = new Date(2026, 4, 1); // 日历当前渲染的月份
+            let selectedStart = null;
+            let selectedEnd = null;
+
+            const startDateInput = document.getElementById('startDateInput');
+            const endDateInput = document.getElementById('endDateInput');
+            const calDaysGrid = document.getElementById('calDaysGrid');
+            const calMonthLabel = document.getElementById('calMonthLabel');
+
+            // 格式化日期为 YYYY/MM/DD
+            function fmt(d) {
+                if(!d) return '';
+                let m = (d.getMonth() + 1).toString().padStart(2, '0');
+                let day = d.getDate().toString().padStart(2, '0');
+                return `${d.getFullYear()}/${m}/${day}`;
+            }
+
+            // 渲染真实日历
+            function renderCalendar() {
+                calDaysGrid.innerHTML = '';
+                let y = currentRenderMonth.getFullYear();
+                let m = currentRenderMonth.getMonth();
+                calMonthLabel.innerText = `${y}年${m + 1}月`;
+
+                let firstDay = new Date(y, m, 1).getDay();
+                let daysInMonth = new Date(y, m + 1, 0).getDate();
+                
+                // 调整让周一作为第一天
+                let emptyDays = firstDay === 0 ? 6 : firstDay - 1;
+
+                for(let i = 0; i < emptyDays; i++) {
+                    let div = document.createElement('div');
+                    div.className = 'cal-day disabled';
+                    div.innerHTML = '<span></span>';
+                    calDaysGrid.appendChild(div);
+                }
+
+                for(let i = 1; i <= daysInMonth; i++) {
+                    let div = document.createElement('div');
+                    div.className = 'cal-day';
+                    div.innerHTML = `<span>${i}</span>`;
+                    
+                    let currentDayDate = new Date(y, m, i);
+                    
+                    if(selectedStart && currentDayDate.getTime() === selectedStart.getTime()) {
+                        div.classList.add('selected');
+                    }
+                    if(selectedEnd && currentDayDate.getTime() === selectedEnd.getTime()) {
+                        div.classList.add('selected');
+                    }
+                    if(selectedStart && selectedEnd && currentDayDate > selectedStart && currentDayDate < selectedEnd) {
+                        div.classList.add('in-range');
+                    }
+
+                    div.onclick = () => {
+                        if(selectedStart && selectedEnd) {
+                            selectedStart = currentDayDate;
+                            selectedEnd = null;
+                        } else if(selectedStart && !selectedEnd) {
+                            if(currentDayDate < selectedStart) {
+                                selectedEnd = selectedStart;
+                                selectedStart = currentDayDate;
+                            } else {
+                                selectedEnd = currentDayDate;
+                            }
+                        } else {
+                            selectedStart = currentDayDate;
+                        }
+                        
+                        startDateInput.value = fmt(selectedStart);
+                        endDateInput.value = fmt(selectedEnd) || '';
+                        renderCalendar(); 
+                        
+                        document.querySelectorAll('.date-shortcut').forEach(s => s.classList.remove('active'));
+                    };
+                    calDaysGrid.appendChild(div);
+                }
+            }
+
+            document.getElementById('calPrevBtn').onclick = () => {
+                currentRenderMonth.setMonth(currentRenderMonth.getMonth() - 1);
+                renderCalendar();
+            };
+            document.getElementById('calNextBtn').onclick = () => {
+                currentRenderMonth.setMonth(currentRenderMonth.getMonth() + 1);
+                renderCalendar();
+            };
+
+            // 快捷键映射表 (基于 2026/05/25)
+            const shortcutsData = {
+                'today': [new Date(2026, 4, 25), new Date(2026, 4, 25)],
+                'yesterday': [new Date(2026, 4, 24), new Date(2026, 4, 24)],
+                'thisWeek': [new Date(2026, 4, 25), new Date(2026, 4, 31)], 
+                'lastWeek': [new Date(2026, 4, 18), new Date(2026, 4, 24)],
+                'thisMonth': [new Date(2026, 4, 1), new Date(2026, 4, 31)],
+                'lastMonth': [new Date(2026, 3, 1), new Date(2026, 3, 30)] // 4月
+            };
+
+            function applyShortcut(type) {
+                const dates = shortcutsData[type];
+                selectedStart = dates[0];
+                selectedEnd = dates[1];
+                startDateInput.value = fmt(selectedStart);
+                endDateInput.value = fmt(selectedEnd);
+                
+                currentRenderMonth = new Date(selectedStart.getFullYear(), selectedStart.getMonth(), 1);
+                renderCalendar();
+            }
+
+            document.querySelectorAll('.date-shortcut').forEach(btn => {
+                btn.onclick = function() {
+                    document.querySelectorAll('.date-shortcut').forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    applyShortcut(this.getAttribute('data-type'));
+                };
+            });
+
+            // 初始化：应用本周作为默认值
+            applyShortcut('thisWeek');
+            document.getElementById('customTimeBtn').innerText = '2026/05/25-2026/05/31'; 
+
+            // ================= 3. 弹窗打开与确认逻辑 =================
+            const dateModal = document.getElementById('datePickerModal');
+            const customBtn = document.getElementById('customTimeBtn');
+            
+            const bindRadioGroup = (selector) => {
+                const btns = document.querySelectorAll(selector);
+                btns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        if(this.id === 'customTimeBtn') return; 
+                        btns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            };
+            bindRadioGroup('.time-group .grid-btn');
+            bindRadioGroup('.metric-group .grid-btn');
+
+            customBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dateModal.classList.add('show');
+                renderCalendar();
+            });
+            
+            const closeDateModal = () => { dateModal.classList.remove('show'); };
+            document.getElementById('closeDateModal').addEventListener('click', closeDateModal);
+            document.getElementById('cancelDateBtn').addEventListener('click', closeDateModal);
+            
+            document.getElementById('confirmDateBtn').addEventListener('click', () => {
+                if(!selectedEnd) selectedEnd = selectedStart; 
+                endDateInput.value = fmt(selectedEnd);
+                
+                closeDateModal();
+                document.querySelectorAll('.time-group .grid-btn').forEach(b => b.classList.remove('active'));
+                customBtn.classList.add('active');
+                customBtn.innerText = `${fmt(selectedStart)}-${fmt(selectedEnd)}`;
+            });
+
+            // ================= 4. 热力分布视图切换与初始化 =================
+            let isPercentMode = false;
+            const toggleHeat = document.getElementById('toggleHeat');
+            const togglePercent = document.getElementById('togglePercent');
+            const heatCards = document.getElementById('heatCardsContainer');
+            const warning = document.getElementById('percentWarning');
+
+            toggleHeat.addEventListener('click', () => {
+                togglePercent.classList.remove('active'); toggleHeat.classList.add('active');
+                warning.style.display = 'none'; heatCards.style.display = 'flex';
+                isPercentMode = false;
+            });
+            togglePercent.addEventListener('click', () => {
+                toggleHeat.classList.remove('active'); togglePercent.classList.add('active');
+                heatCards.style.display = 'none'; warning.style.display = 'block';
+                isPercentMode = true;
+            });
+
+            document.querySelectorAll('.heat-card').forEach(card => {
+                card.addEventListener('click', function() { this.classList.toggle('active'); });
+            });
+
+            const heatElements = document.querySelectorAll('.action-btn, .pill, .block-cell, .tab-btn, .side-item, .toggle-btn, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab');
+            heatElements.forEach((el, index) => {
+                let p = 0, remainder = index % 4;
+                if (remainder === 1) p = Math.floor(Math.random() * 49) + 51;
+                else if (remainder === 2) p = Math.floor(Math.random() * 40) + 10;
+                else if (remainder === 3) p = Math.floor(Math.random() * 9) + 1;
+                el.setAttribute('data-percent', p + '%');
+            });
+
+            document.getElementById('applyFilters').addEventListener('click', () => {
+                document.body.classList.remove('show-heat-red', 'show-heat-orange', 'show-heat-blue', 'show-heat-percent');
+                if (isPercentMode) {
+                    document.body.classList.add('show-heat-percent');
+                } else {
+                    document.querySelectorAll('.heat-card.active').forEach(card => {
+                        document.body.classList.add('show-heat-' + card.getAttribute('data-color'));
+                    });
+                }
+                closeAll();
+            });
+            document.getElementById('applyFilters').click();
+            closeAll();
+
+            // ================= 5. 交互式 SVG 趋势图绘制引擎 (支持自适应缩放) =================
+            let currentChartDays = 7;
+            let currentChartMetric = '量';
+
+            function renderChart(days, metricType) {
+                const svg = document.getElementById('trendSvg');
+                if(!svg) return;
+                
+                let data = [];
+                let maxVal = 0;
+                for(let i=0; i<days; i++) {
+                    let val = metricType === '量' ? Math.floor(Math.random()*8000 + 1000) : +(Math.random()*20 + 2).toFixed(1);
+                    data.push(val);
+                    if(val > maxVal) maxVal = val;
+                }
+                maxVal = maxVal * 1.2 || 1; 
+
+                // 获取弹窗放大后的实际内部宽度 (大概 750px 左右)
+                let width = svg.clientWidth || 750;
+                let height = 200; // 同步放大的图表高度
+                let step = width / (days - 1);
+                
+                // 动态更新SVG的视口坐标系以匹配真实尺寸
+                svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+                let pathD = `M0,${height}`;
+                let lineD = ``;
+                let circles = '';
+                let hitRects = ''; 
+
+                data.forEach((val, i) => {
+                    let x = i * step;
+                    let y = height - (val / maxVal) * height;
+                    
+                    if(i===0) { pathD += ` L${x},${y}`; lineD += `M${x},${y}`; }
+                    else { pathD += ` L${x},${y}`; lineD += ` L${x},${y}`; }
+                    
+                    // 放大原点半径以适配大屏
+                    circles += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#5a8dff" stroke-width="2.5" class="data-point" data-val="${val}" data-x="${x}" data-y="${y}" data-index="${i}"></circle>`;
+
+                    let rectX = Math.max(0, x - step/2);
+                    let rectW = step;
+                    if(i===0) { rectX = 0; rectW = step/2; }
+                    if(i===days-1) { rectW = step/2; }
+                    hitRects += `<rect x="${rectX}" y="0" width="${rectW}" height="${height}" fill="transparent" style="cursor:crosshair;" class="hit-area" data-index="${i}"></rect>`;
+                });
+                pathD += ` L${width},${height} Z`;
+
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#5a8dff" stop-opacity="0.3"></stop>
+                            <stop offset="100%" stop-color="#5a8dff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                    <path d="${pathD}" fill="url(#trendGradient)"></path>
+                    <path d="${lineD}" fill="none" stroke="#5a8dff" stroke-width="2.5"></path>
+                    <line id="hoverLine" x1="0" y1="0" x2="0" y2="${height}" stroke="#dcdfe6" stroke-width="1" stroke-dasharray="4" style="display:none; pointer-events:none;"></line>
+                    ${circles}
+                    ${hitRects}
+                `;
+
+                const rects = svg.querySelectorAll('.hit-area');
+                const hLine = svg.getElementById('hoverLine');
+                const cTip = document.getElementById('chartTip');
+                const pts = svg.querySelectorAll('.data-point');
+
+                rects.forEach(rect => {
+                    rect.addEventListener('mouseenter', function() {
+                        let idx = this.getAttribute('data-index');
+                        let pt = pts[idx];
+                        let px = pt.getAttribute('data-x');
+                        let py = pt.getAttribute('data-y');
+                        let pval = pt.getAttribute('data-val');
+
+                        hLine.setAttribute('x1', px);
+                        hLine.setAttribute('x2', px);
+                        hLine.style.display = 'block';
+
+                        pt.setAttribute('r', '7'); // Hover时变得更大
+                        pt.setAttribute('fill', '#5a8dff');
+
+                        cTip.innerText = metricType === '量' ? `数据: ${pval}` : `占比: ${pval}%`;
+                        cTip.style.left = px + 'px';
+                        cTip.style.top = (py - 8) + 'px';
+                        cTip.style.display = 'block';
+                    });
+                    rect.addEventListener('mouseleave', function() {
+                        let idx = this.getAttribute('data-index');
+                        let pt = pts[idx];
+                        hLine.style.display = 'none';
+                        pt.setAttribute('r', '4');
+                        pt.setAttribute('fill', '#fff');
+                        cTip.style.display = 'none';
+                    });
+                });
+            }
+
+            // ================= 6. 图表 Tab 切换逻辑 =================
+            const timeTabs = document.querySelectorAll('#chartTimeTabs span');
+            const metricTabs = document.querySelectorAll('#chartMetricTabs span');
+            
+            timeTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    timeTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentChartDays = this.innerText === '近7天' ? 7 : 30;
+                    renderChart(currentChartDays, currentChartMetric);
+                });
+            });
+
+            metricTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    metricTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentChartMetric = this.innerText === '点击量' ? '量' : '占比';
+                    renderChart(currentChartDays, currentChartMetric);
+                });
+            });
+
+            // ================= 7. 悬停 2 秒弹窗放大及联动逻辑 =================
+            let hoverTimer = null;
+            const tooltip = document.getElementById('heatmapTooltip');
+            const closeTooltipBtn = document.getElementById('ttCloseBtn');
+            
+            closeTooltipBtn.addEventListener('click', () => {
+                tooltip.classList.remove('show');
+            });
+            
+            heatElements.forEach(el => {
+                el.addEventListener('mouseenter', function(e) {
+                    clearTimeout(hoverTimer);
+                    hoverTimer = setTimeout(() => {
+                        const activeTimeBtn = document.querySelector('.time-group .grid-btn.active');
+                        let timeText = activeTimeBtn ? activeTimeBtn.innerText : '2026/05/25-2026/05/31';
+                        
+                        let dateRangeStr = '';
+                        if(timeText === '今日') dateRangeStr = '2026/05/25';
+                        else if(timeText === '昨日') dateRangeStr = '2026/05/24';
+                        else if(timeText === '近7天') dateRangeStr = '2026/05/19-2026/05/25';
+                        else {
+                            dateRangeStr = timeText;
+                        }
+                        
+                        document.getElementById('ttPeriodLabel').innerText = dateRangeStr;
+                        
+                        const text = this.innerText.trim().split('\n')[0] || '功能区块';
+                        const percentStr = this.getAttribute('data-percent') || '0%';
+                        const percentNum = parseInt(percentStr);
+                        
+                        document.getElementById('ttTitle').innerText = text.substring(0, 12);
+                        document.getElementById('ttToday').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                        document.getElementById('ttYest').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                        document.getElementById('ttPeriod').innerText = (Math.floor(Math.random() * 20000) + 5000).toLocaleString();
+                        
+                        const badge = document.getElementById('ttBadge');
+                        const progress = document.getElementById('ttProgress');
+                        progress.style.width = percentStr;
+                        
+                        let levelStr = '低';
+                        badge.className = 'tt-badge blue';
+                        progress.style.background = '#3e88ff';
+                        if (percentNum > 50) { levelStr = '高'; badge.className = 'tt-badge red'; progress.style.background = '#ff5b69'; }
+                        else if (percentNum >= 10) { levelStr = '中'; badge.className = 'tt-badge orange'; progress.style.background = '#ffaa33'; }
+                        
+                        badge.innerText = levelStr + '热区';
+                        document.getElementById('ttSummaryText').innerText = `本区域为${levelStr}热度区域，点击量占比 ${percentStr}。`;
+
+                        // 弹窗变大后，需要重新计算边界 (宽度 800px)
+                        const boxWidth = 800; const boxHeight = 560; 
+                        let leftPos = e.pageX + 15;
+                        let topPos = e.pageY + 15;
+                        if(leftPos + boxWidth > window.innerWidth) leftPos = window.innerWidth - boxWidth - 10;
+                        if(topPos + boxHeight > window.innerHeight) topPos = window.innerHeight - boxHeight - 10;
+                        
+                        tooltip.style.left = leftPos + 'px';
+                        tooltip.style.top = topPos + 'px';
+                        tooltip.classList.add('show');
+                        
+                        // 弹窗展示后，渲染放大的趋势图
+                        renderChart(currentChartDays, currentChartMetric);
+
+                    }, 2000); 
+                });
+                
+                el.addEventListener('mouseleave', function() {
+                    clearTimeout(hoverTimer);
+                });
+            });
+            
+        });
+    </script>
+</body>
+</html>
