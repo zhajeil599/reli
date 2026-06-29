@@ -823,13 +823,13 @@
       overflow: hidden !important; /* 禁止外层整体滚动 */
       display: flex !important;
       flex-direction: column !important;
-      max-height: calc(100vh - 220px);
+      height: calc(100vh - 240px); /* 改为跟H5完全一致的固定高度 */
   }
 
   /* 右栏保持不变，依旧整体滚动 */
   .panel-right-content {
       overflow-y: auto !important;
-      max-height: calc(100vh - 220px);
+      height: calc(100vh - 240px); /* 改为跟H5完全一致的固定高度 */
   }
 
   /* 新增：左栏和中栏专属的内部独立滚动区域 */
@@ -1053,7 +1053,124 @@
   .btn-hollow { padding: 8px 20px; background: #fff; border: 1px solid #dcdfe6; border-radius: 4px; color: #606266; cursor: pointer;}
   .btn-solid { padding: 8px 20px; background: #5a8dff; border: none; border-radius: 4px; color: #fff; cursor: pointer;}
 
+      /* --- H5 热力图容器及内部结构样式 --- */
+      #h5LayoutWrapper {
+          display: none; /* 默认隐藏，点击切换后展示 */
+          width: 100%;
+          justify-content: center;
+          background-color: #eaedf1;
+          padding: 16px 0;
+          overflow: hidden; /* 去掉外层无谓的滚动条 */
+      }
+
+      .h5-mobile-container {
+          width: 375px; /* 模拟常规 H5 手机宽度 */
+          height: calc(100vh - 240px); /* 强制与PC端高度完全绝对对齐 */
+          background-color: #f0f2f5;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          overflow-y: auto; /* 让滚动条出现在手机壳内部 */
+      }
+
+      /* 新增：强制让 H5 的第一行菜单在手机内固定吸顶，不跟随滚动 */
+      .h5-mobile-container > .h5-row-block:first-child {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* 滚动时增加一层微弱阴影提升层级感 */
+      }
+
+      .h5-row-block {
+          background: #ffffff;
+          padding: 8px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+      }
+
+      .h5-grid-btn {
+          flex: 1;
+          min-width: 50px;
+          background: #f5f7fa;
+          border-radius: 4px;
+          text-align: center;
+          padding: 6px 0;
+          font-size: 12px;
+          color: #606266;
+          cursor: pointer;
+          border: 1px solid transparent;
+      }
+      .h5-grid-btn.active { color: #5a8dff; font-weight: bold; }
+
+      .h5-venue-block {
+          display: flex; gap: 6px; padding: 8px; background: #fff;
+      }
+      .h5-venue-item {
+          flex: 1; background: #f5f7fa; padding: 12px 0; text-align: center; border-radius: 4px; font-weight: bold; font-size: 13px; color: #303133;
+      }
+      .h5-venue-item span { display: block; font-size: 10px; color: #909399; font-weight: normal; transform: scale(0.9);}
+
+      .h5-sport-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 6px;
+          background: #fff;
+          padding: 8px;
+      }
+      .h5-sport-item {
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          background: #f5f7fa; border-radius: 4px; padding: 8px 0; gap: 4px; font-size: 11px; color: #606266; cursor: pointer;
+      }
+      .h5-sport-item .icon-circle {
+          width: 28px; height: 28px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .h5-odds-boost {
+          background: #fff; padding: 8px; display: flex; flex-direction: column; gap: 8px;
+      }
+      .h5-odds-cards {
+          display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px;
+      }
+      .h5-odds-cards::-webkit-scrollbar { height: 4px; }
+      .h5-odds-cards::-webkit-scrollbar-thumb { background: #dcdfe6; border-radius: 2px; }
+
+      .h5-match-card {
+          background: #fff; padding: 8px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px;
+      }
+      .h5-match-title-row {
+          display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f2f5; padding-bottom: 6px; font-size: 13px; font-weight: bold;
+      }
+      .h5-match-body { display: flex; gap: 6px; height: 120px;}
+      .h5-match-info { flex: 1.2; background: #f5f7fa; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border-radius: 4px;}
+      .h5-match-odds { flex: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+      .h5-odds-cell { background: #f5f7fa; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border-radius: 4px; flex-direction: column;}
+
 </style>
+
+<style>
+        /* --- 补充：H5热力图区块专属闪烁动效 --- */
+        .h5-heat-el { position: relative; overflow: hidden; }
+        .h5-heat-el::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 5; pointer-events: none; border-radius: inherit; display: none;
+            animation: heatFlash 2.5s infinite alternate ease-in-out;
+        }
+        body.show-heat-red .h5-heat-el:nth-child(4n+1)::after { display: block; background-color: rgba(255, 91, 105, 0.45); }
+        body.show-heat-orange .h5-heat-el:nth-child(4n+2)::after { display: block; background-color: rgba(255, 170, 51, 0.45); }
+        body.show-heat-blue .h5-heat-el:nth-child(4n+3)::after { display: block; background-color: rgba(62, 136, 255, 0.45); }
+        body.show-heat-percent .h5-heat-el::before {
+            content: attr(data-percent); position: absolute; top: 2px; right: 4px;
+            font-size: 10px; font-weight: bold; z-index: 6; pointer-events: none;
+            background-color: rgba(11, 29, 56, 0.6); color: #ffffff;
+            border: none; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+
+
+
+
 </head>
 <body class="heatmap-on">
 
@@ -1189,6 +1306,7 @@
                 </div>            
             
                 <div class="data-card-body">
+                  <div id="pcLayoutWrapper" style="display: flex; width: 100%;">
                                     
                     <div class="panel-left-sidebar">
                                             
@@ -1209,8 +1327,8 @@
                         <div class="side-item" style="background-color: #eaedf1; border-bottom: 1px solid #ffffff;"><span class="icon">📜</span> 投注记录</div>
 
                         <div class="sidebar-menu-scroll-part">
-                            <div class="side-item active"><span class="icon">⚽</span> 滚球赛事</div>
-                            <div class="side-item"><span class="icon">🔥</span> 热门赛事</div>
+                            <div class="side-item active" id="sideItemInplay"><span class="icon">⚽</span> 滚球赛事</div>
+                            <div class="side-item" id="sideItemHot"><span class="icon">🔥</span> 热门赛事</div>
                                         
                             <div class="side-title" style="background-color: #ffffff;">体育菜单</div>
                                         
@@ -1247,12 +1365,12 @@
                         <div class="mid-announcement">公告</div>
 
                         <div class="mid-row filter-row-1">
-                            <div class="mid-title">滚球盘</div>
+                            <div class="mid-title" id="midTitle">滚球盘</div>
                             <div class="filter-pills">
                                 <span class="pill">近期开赛（全部）</span>
                                 <span class="pill">选择联赛（全部）</span>
                                 <span class="pill">香港盘</span>
-                                <span class="pill pill-active">专业</span>
+                                <span class="pill">专业</span>
                                 <span class="pill">新手</span>
                                 <span class="pill">热门</span>
                                 <span class="pill">时间</span>
@@ -1264,8 +1382,8 @@
                             </div>
                         </div>
 
-                        <div class="mid-row filter-row-2">
-                            <span class="pill pill-active"><span class="icon">🌐</span> 全部</span>
+                        <div class="mid-row filter-row-2" id="filterRow2">
+                            <span class="pill"><span class="icon">🌐</span> 全部</span>
                             <span class="pill"><span class="icon">⭐</span> 收藏</span>
                             <span class="pill"><span class="icon">⚽</span> 足球</span>
                             <span class="pill"><span class="icon">🏀</span> 篮球</span>
@@ -1285,7 +1403,7 @@
                             </div>
                         </div>
 
-                        <div class="mid-content-scroll-part">
+                        <div class="mid-content-scroll-part" id="sportSectionContainer">
                 
                             <div class="sport-section">
                                 <div class="mid-row control-bar">
@@ -1676,7 +1794,123 @@
                         </div>
 
                     </div>
+                </div>
 
+                
+                  <div id="h5LayoutWrapper">
+                    <div class="h5-mobile-container">
+                        <div class="h5-row-block">
+                            <div class="h5-grid-btn active h5-heat-el">今日</div>
+                            <div class="h5-grid-btn h5-heat-el">滚球</div>
+                            <div class="h5-grid-btn h5-heat-el">早盘</div>
+                            <div class="h5-grid-btn h5-heat-el">串关</div>
+                            <div class="h5-grid-btn h5-heat-el">冠军</div>
+                            <div class="h5-grid-btn h5-heat-el" style="flex: 2; background: #fff3e0; color: #d48806; display: flex; align-items: center; justify-content: center; gap:4px;"><span style="color:#f56c6c;">©</span> 1,000,000.00</div>
+                        </div>
+
+                        <div class="h5-row-block">
+                            <div class="h5-grid-btn h5-heat-el">专业版</div>
+                            <div class="h5-grid-btn h5-heat-el">新手版</div>
+                            <div class="h5-grid-btn h5-heat-el">热门</div>
+                            <div class="h5-grid-btn h5-heat-el">时间</div>
+                            <div class="h5-grid-btn h5-heat-el">日间版</div>
+                            <div class="h5-grid-btn h5-heat-el">夜间版</div>
+                        </div>
+
+                        <div class="h5-venue-block">
+                            <div class="h5-venue-item h5-heat-el">真人娱乐 <span>CASINO</span></div>
+                            <div class="h5-venue-item h5-heat-el">电子游戏 <span>SLOTS GAMES</span></div>
+                            <div class="h5-venue-item h5-heat-el">彩票投注 <span>LOTTERY</span></div>
+                        </div>
+
+                        <div class="h5-sport-grid">
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle" style="color: #3b82f6;">⭐</div>收藏</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">📝</div>注单</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle" style="color: #f56c6c;">🔥</div>热门</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">⚽</div>足球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏀</div>篮球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🎮</div>电竞</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">⚽</div>电子足球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏀</div>电子篮球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🔽</div>VR体育</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🎾</div>网球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏸</div>羽毛球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏓</div>乒乓球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">⚾</div>棒球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏏</div>板球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🤾</div>手球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🥊</div>拳击格斗</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏖️</div>沙滩排球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🤽</div>水球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏑</div>曲棍球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏈</div>橄榄球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏒</div>冰球</div>
+                            <div class="h5-sport-item h5-heat-el"><div class="icon-circle">🏈</div>美式足球</div>
+                        </div>
+
+                        <div class="h5-row-block">
+                            <div class="h5-grid-btn active h5-heat-el" style="min-width: 40px;">全部</div>
+                            <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">热门1</div>
+                            <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">热门2</div>
+                            <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">热门3</div>
+                            <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">热门4</div>
+                            <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">搜索</div>
+                        </div>
+
+                        <div class="h5-odds-boost">
+                            <div style="display:flex; justify-content: space-between; font-size: 12px; font-weight: bold;">
+                                <span><span style="color:#f56c6c;">UP</span> 赔率增值</span>
+                                <span class="h5-heat-el" style="background:#f0f2f5; padding: 2px 8px; border-radius:10px;">全部增值</span>
+                            </div>
+                            <div class="h5-odds-cards">
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片1位</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片2位</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片3位</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片4位</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片5位</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 60px; padding: 20px 0;">卡片6位</div>
+                            </div>
+                        </div>
+
+                        <div class="h5-match-card">
+                            <div class="h5-match-title-row">
+                                <span style="color: #3b82f6;">🏆 进行中</span>
+                                <div><span class="h5-heat-el" style="padding: 2px 8px; background: #f0f2f5; border-radius: 12px; font-weight: normal;">展开</span></div>
+                            </div>
+                            <div style="font-size: 12px; color: #909399;">足球 (2)</div>
+                            
+                            <div class="h5-row-block" style="padding:0;">
+                                <div style="font-weight:bold; font-size: 15px; margin-right:auto;">联赛标题</div>
+                                <div class="h5-grid-btn h5-heat-el" style="padding: 2px 6px;">收藏</div>
+                                <div class="h5-grid-btn h5-heat-el" style="padding: 2px 6px;">置顶</div>
+                                <div class="h5-grid-btn h5-heat-el" style="padding: 2px 6px;">展开</div>
+                            </div>
+
+                            <div class="h5-match-body">
+                                <div class="h5-match-info h5-heat-el">赛事信息</div>
+                                <div class="h5-match-odds">
+                                    <div class="h5-odds-cell h5-heat-el">全场独赢</div>
+                                    <div class="h5-odds-cell h5-heat-el">全场让球</div>
+                                    <div class="h5-odds-cell h5-heat-el">全场大小</div>
+                                    <div class="h5-odds-cell h5-heat-el">半场独赢</div>
+                                    <div class="h5-odds-cell h5-heat-el">半场让球</div>
+                                    <div class="h5-odds-cell h5-heat-el">半场大小</div>
+                                </div>
+                            </div>
+
+                            <div class="h5-row-block" style="padding: 4px 0 0 0;">
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">晋级</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">角球</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">15分钟</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">罚牌</div>
+                                <div class="h5-grid-btn h5-heat-el" style="min-width: 40px;">波胆</div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
                 </div>
 
             </div>
@@ -1708,22 +1942,60 @@
                 </select>
             </div>
             
-            <div class="form-group">
+            <div class="form-group" id="pcMenuFilterGroup">
                 <label class="form-label">左侧菜单</label>
                 <div style="display: flex; gap: 8px;">
                     <select class="form-select" id="menuLvl1">
-                        <option>今日</option>
-                        <option>早盘</option>
-                        <option>五大联赛</option>
-                        <option>NBA</option>
-                        <option>热门赛事</option>
-                        <option selected>滚球</option>
+                        <option value="今日">今日</option>
+                        <option value="早盘">早盘</option>
+                        <option value="五大联赛">五大联赛</option>
+                        <option value="NBA">NBA</option>
+                        <option value="热门赛事">热门赛事</option>
+                        <option value="滚球赛事" selected>滚球赛事</option>
                     </select>
                     <select class="form-select" id="menuLvl2" style="display: none;">
-                        <option>足球</option><option>篮球</option><option>真人娱乐</option>
-                        <option>电子竞技</option><option>彩票投注</option><option>网球</option>
-                    </select>
+                        <option>足球</option>
+                        <option>篮球</option>
+                        <option>真人娱乐</option>
+                        <option>电子竞技</option>
+                        </select>
                 </div>
+            </div>
+
+            <div class="form-group" id="h5MenuFilterGroup" style="display: none;">
+                <label class="form-label">顶部菜单</label>
+                <select class="form-select" id="h5TopMenu" style="margin-bottom: 12px;">
+                    <option value="今日" selected>今日</option>
+                    <option value="滚球">滚球</option>
+                    <option value="早盘">早盘</option>
+                    <option value="串关">串关</option>
+                    <option value="冠军">冠军</option>
+                </select>
+                
+                <label class="form-label">球种</label>
+                <select class="form-select" id="h5SportType">
+                    <option value="收藏" selected>收藏</option>
+                    <option value="热门">热门</option>
+                    <option value="足球">足球</option>
+                    <option value="篮球">篮球</option>
+                    <option value="电竞">电竞</option>
+                    <option value="电子足球">电子足球</option>
+                    <option value="电子篮球">电子篮球</option>
+                    <option value="VR体育">VR体育</option>
+                    <option value="网球">网球</option>
+                    <option value="羽毛球">羽毛球</option>
+                    <option value="乒乓球">乒乓球</option>
+                    <option value="棒球">棒球</option>
+                    <option value="板球">板球</option>
+                    <option value="手球">手球</option>
+                    <option value="拳击格斗">拳击格斗</option>
+                    <option value="沙滩排球">沙滩排球</option>
+                    <option value="水球">水球</option>
+                    <option value="曲棍球">曲棍球</option>
+                    <option value="橄榄球">橄榄球</option>
+                    <option value="冰球">冰球</option>
+                    <option value="美式足球">美式足球</option>
+                </select>
             </div>
             
             <div class="form-group">
@@ -1895,6 +2167,46 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            // ================= 0. PC 与 H5 视图切换逻辑 =================
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            const pcLayout = document.getElementById('pcLayoutWrapper');
+            const h5Layout = document.getElementById('h5LayoutWrapper');
+            const pcFilterGroup = document.getElementById('pcMenuFilterGroup');
+            const h5FilterGroup = document.getElementById('h5MenuFilterGroup');
+            
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 按钮激活状态切换
+                    toggleBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const dataCardHeader = document.querySelector('.data-card-header');
+                    // 判断点的是 H5 还是 PC
+                    if (this.innerText.includes('H5热力图')) {
+                        pcLayout.style.display = 'none';
+                        h5Layout.style.display = 'flex';
+                        pcFilterGroup.style.display = 'none';
+                        h5FilterGroup.style.display = 'block';
+                        if (dataCardHeader) dataCardHeader.style.display = 'none'; // 隐藏头部
+                    } else {
+                        pcLayout.style.display = 'flex';
+                        h5Layout.style.display = 'none';
+                        pcFilterGroup.style.display = 'block';
+                        h5FilterGroup.style.display = 'none';
+                        if (dataCardHeader) dataCardHeader.style.display = 'flex'; // 恢复头部
+                    }
+                    
+                    // 触发重新绑定悬停及色块动效，这样 H5 切出来后马上就有趋势图Hover了
+                    setTimeout(() => {
+                        if(typeof window.attachHeatEventsToMakeTooltipWork === 'function') {
+                            window.attachHeatEventsToMakeTooltipWork();
+                        }
+                    }, 50);
+                });
+            });
+
+
             // ================= 核心：全局假定今天是 2026年5月25日 =================
             const MOCK_TODAY = new Date(2026, 4, 25); // 月份从0开始，4代表5月
             
@@ -2094,7 +2406,7 @@
                 card.addEventListener('click', function() { this.classList.toggle('active'); });
             });
 
-            const heatElements = document.querySelectorAll('.action-btn, .pill, .block-cell, .tab-btn, .side-item, .toggle-btn, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab');
+            const heatElements = document.querySelectorAll('.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab');
             heatElements.forEach((el, index) => {
                 let p = 0, remainder = index % 4;
                 if (remainder === 1) p = Math.floor(Math.random() * 49) + 51;
@@ -2103,7 +2415,135 @@
                 el.setAttribute('data-percent', p + '%');
             });
 
+            // 【新调整】滚球赛事下的标签文案
+            const originalFilterHTML = `
+                <span class="pill pill-active"><span class="icon">🌐</span> 全部</span>
+                <span class="pill"><span class="icon">⭐</span> 收藏</span>
+                <span class="pill"><span class="icon">⚽</span> 足球</span>
+                <span class="pill"><span class="icon">🏀</span> 篮球</span>
+                <span class="pill"><span class="icon">🛡️</span> 英雄联盟</span>
+                <span class="pill"><span class="icon">⚔️</span> DOTA2</span>
+                <span class="pill"><span class="icon">🎾</span> 网球</span>
+                <span class="pill"><span class="icon">🏸</span> 羽毛球</span>
+                <span class="pill"><span class="icon">🏐</span> 排球</span>
+                <span class="pill"><span class="icon">🏏</span> 板球</span>
+            `;
+
+            // 【新调整】热门赛事下的标签文案（去掉了第一个标签的 pill-active 选中高亮状态）
+            const hotFilterHTML = `
+                <span class="pill"><span class="icon">🌐</span> 全部</span>
+                <span class="pill"><span class="icon">⭐</span> 收藏</span>
+                <span class="pill">精选</span>
+                <span class="pill">热门1</span>
+                <span class="pill">热门2</span>
+                <span class="pill">热门3</span>
+                <span class="pill">热门4</span>
+                <span class="pill">热门5</span>
+                <span class="pill">热门7</span>
+                <span class="pill">热门8</span>
+                <span class="pill">热门9</span>
+                <span class="pill">热门10</span>
+            `;
+
+            // 【新调整】五大联赛下的两行标签文案（首行增加全部和收藏，第二行为日期，均无高亮状态， border-bottom和padding调整确保视觉美 plain 间距）
+            const leaguesFilterHTML = `
+                <div class="mid-row filter-row-2" style="margin-bottom: 0px; border-bottom: none; padding-bottom: 4px;">
+                    <span class="pill"><span class="icon">🌐</span> 全部</span>
+                    <span class="pill"><span class="icon">⭐</span> 收藏</span>
+                </div>
+                <div class="mid-row filter-row-2" style="padding-top: 4px; border-bottom: none;">
+                    <span class="pill">联赛展开</span>
+                    <span class="pill">联赛收起</span>
+                    <span class="pill">所有日期</span>
+                    <span class="pill">日期1#</span>
+                    <span class="pill">日期2#</span>
+                    <span class="pill">日期3#</span>
+                    <span class="pill">日期4#</span>
+                    <span class="pill">日期5#</span>
+                    <span class="pill">日期6#</span>
+                    <span class="pill">日期7#</span>
+                    <span class="pill">日期8#</span>
+                    <span class="pill">日期9#</span>
+                    <span class="pill">日期10#</span>
+                    <span class="pill">其它日期</span>
+                </div>
+            `;
+
+            // 核心功能函数：为动态更新生成的全新功能块/标签块重新生成热力图占比并注入2秒悬停弹窗逻辑
+            function attachHeatEventsToNewElements() {
+                const dynamicElements = document.querySelectorAll('.action-btn, .pill, .block-cell, .tab-btn, .side-item, .refresh-btn, .sidebar-search, .mid-announcement, .mini-bet-placeholder, .side-tab, .h5-heat-el');
+                
+                dynamicElements.forEach((el, index) => {
+                    // 如果是新标签，初始化随机热力图占比数
+                    if (!el.getAttribute('data-percent')) {
+                        let p = 0, remainder = index % 4;
+                        if (remainder === 1) p = Math.floor(Math.random() * 49) + 51;
+                        else if (remainder === 2) p = Math.floor(Math.random() * 40) + 10;
+                        else if (remainder === 3) p = Math.floor(Math.random() * 9) + 1;
+                        el.setAttribute('data-percent', p + '%');
+                    }
+
+                    // 重新绑定2秒鼠标滑入悬停浮窗事件
+                    el.onmouseenter = function(e) {
+                        clearTimeout(hoverTimer);
+                        hoverTimer = setTimeout(() => {
+                            const activeTimeBtn = document.querySelector('.time-group .grid-btn.active');
+                            let timeText = activeTimeBtn ? activeTimeBtn.innerText : '2026/05/25-2026/05/31';
+                            
+                            let dateRangeStr = '';
+                            if(timeText === '今日') dateRangeStr = '2026/05/25';
+                            else if(timeText === '昨日') dateRangeStr = '2026/05/24';
+                            else if(timeText === '近7天') dateRangeStr = '2026/05/19-2026/05/25';
+                            else { dateRangeStr = timeText; }
+                            
+                            document.getElementById('ttPeriodLabel').innerText = dateRangeStr;
+                            
+                            const text = this.innerText.trim().split('\n')[0] || '功能区块';
+                            const percentStr = this.getAttribute('data-percent') || '0%';
+                            const percentNum = parseInt(percentStr);
+                            
+                            document.getElementById('ttTitle').innerText = text.substring(0, 12);
+                            document.getElementById('ttToday').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                            document.getElementById('ttYest').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                            document.getElementById('ttPeriod').innerText = (Math.floor(Math.random() * 20000) + 5000).toLocaleString();
+                            
+                            const badge = document.getElementById('ttBadge');
+                            const progress = document.getElementById('ttProgress');
+                            progress.style.width = percentStr;
+                            
+                            let levelStr = '低';
+                            badge.className = 'tt-badge blue';
+                            progress.style.background = '#3e88ff';
+                            if (percentNum > 50) { levelStr = '高'; badge.className = 'tt-badge red'; progress.style.background = '#ff5b69'; }
+                            else if (percentNum >= 10) { levelStr = '中'; badge.className = 'tt-badge orange'; progress.style.background = '#ffaa33'; }
+                            
+                            badge.innerText = levelStr + '热区';
+                            document.getElementById('ttSummaryText').innerText = `本区域为${levelStr}热度区域，点击量占比 ${percentStr}。`;
+
+                            const boxWidth = 800; const boxHeight = 560; 
+                            let leftPos = e.pageX + 15;
+                            let topPos = e.pageY + 15;
+                            if(leftPos + boxWidth > window.innerWidth) leftPos = window.innerWidth - boxWidth - 10;
+                            if(topPos + boxHeight > window.innerHeight) topPos = window.innerHeight - boxHeight - 10;
+                            
+                            tooltip.style.left = leftPos + 'px';
+                            tooltip.style.top = topPos + 'px';
+                            tooltip.classList.add('show');
+                            
+                            renderChart(currentChartDays, currentChartMetric);
+                        }, 2000); 
+                    };
+
+                    el.onmouseleave = function() {
+                        clearTimeout(hoverTimer);
+                    };
+                });
+            }
+
+            // 重新绑定【确定】按钮的点击事件
             document.getElementById('applyFilters').addEventListener('click', () => {
+                
+                // 1. 原有的热力图颜色刷新和遮罩逻辑
                 document.body.classList.remove('show-heat-red', 'show-heat-orange', 'show-heat-blue', 'show-heat-percent');
                 if (isPercentMode) {
                     document.body.classList.add('show-heat-percent');
@@ -2112,8 +2552,280 @@
                         document.body.classList.add('show-heat-' + card.getAttribute('data-color'));
                     });
                 }
+
+                // 2. 读取左侧菜单下拉框的值，进行多模态联动切换
+                const menuLvl1Val = document.getElementById('menuLvl1').value;
+                const menuLvl2Val = document.getElementById('menuLvl2').value;
+                const sideItemInplay = document.getElementById('sideItemInplay');
+                const sideItemHot = document.getElementById('sideItemHot');
+                const filterRow2 = document.getElementById('filterRow2');
+                const midTitle = document.getElementById('midTitle');
+                const sportContainer = document.getElementById('sportSectionContainer');
+
+                // 每次点击确定前，先把隐藏的所有球类面板恢复显示，以便后续重新过滤
+                if (sportContainer) {
+                    const allSportSections = sportContainer.querySelectorAll('.sport-section');
+                    allSportSections.forEach(sec => { sec.style.display = 'block'; });
+                }
+
+                // 清理左侧可能遗留的高亮激活状态
+                const allSideItems = document.querySelectorAll('.side-item');
+                allSideItems.forEach(item => { 
+                    item.classList.remove('active'); 
+                });
+                
+                // 每次切换前，先清理之前可能插入的动态模块，防止重复出现
+                const oldBoost = document.getElementById('dynamicOddsBoost');
+                if (oldBoost) oldBoost.remove();
+                const oldDateRow = document.getElementById('dynamicDateRow');
+                if (oldDateRow) oldDateRow.remove();
+
+                // 模式一：切换回【滚球赛事】
+                if (menuLvl1Val === '滚球赛事' || menuLvl1Val === '滚球') {
+                    if(sideItemInplay) sideItemInplay.classList.add('active');
+                    if(midTitle) midTitle.innerText = '滚球盘';
+                    if(filterRow2) {
+                        filterRow2.innerHTML = originalFilterHTML;
+                        filterRow2.style.display = 'flex'; // 恢复横向单行布局
+                    }
+                    const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                    if(headerBlueTitle) headerBlueTitle.innerText = '足球';
+                } 
+                // 模式二：切换到【热门赛事】
+                else if (menuLvl1Val === '热门赛事') {
+                    if(sideItemHot) sideItemHot.classList.add('active');
+                    if(midTitle) midTitle.innerText = '热门赛事';
+                    if(filterRow2) {
+                        filterRow2.innerHTML = hotFilterHTML;
+                        filterRow2.style.display = 'flex'; 
+                    }
+                    const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                    if(headerBlueTitle) headerBlueTitle.innerText = '足球';
+                } 
+                // 模式三：切换到【五大联赛】
+                else if (menuLvl1Val === '五大联赛') {
+                    allSideItems.forEach(item => { if(item.innerText.includes('五大联赛')) item.classList.add('active'); });
+                    if(midTitle) midTitle.innerText = '五大联赛';
+                    if(filterRow2) {
+                        filterRow2.innerHTML = leaguesFilterHTML;
+                        filterRow2.style.display = 'block'; 
+                    }
+                    const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                    if(headerBlueTitle) headerBlueTitle.innerText = '未开赛';
+                    if(sportContainer) {
+                        const allSportSections = sportContainer.querySelectorAll('.sport-section');
+                        allSportSections.forEach((sec, index) => { 
+                            if (index === 0) sec.style.display = 'block';
+                            else sec.style.display = 'none'; 
+                        });
+                    }
+                }
+                // 模式四：切换到【NBA】
+                else if (menuLvl1Val === 'NBA') {
+                    allSideItems.forEach(item => { if(item.innerText.includes('NBA')) item.classList.add('active'); });
+                    if(midTitle) midTitle.innerText = 'NBA';
+                    if(filterRow2) {
+                        filterRow2.innerHTML = leaguesFilterHTML;
+                        filterRow2.style.display = 'block'; 
+                    }
+                    const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                    if(headerBlueTitle) headerBlueTitle.innerText = '未开赛';
+                    if(sportContainer) {
+                        const allSportSections = sportContainer.querySelectorAll('.sport-section');
+                        allSportSections.forEach((sec, index) => { 
+                            if (index === 1) sec.style.display = 'block';
+                            else sec.style.display = 'none'; 
+                        });
+                    }
+                }
+                // 模式五：【今日 / 早盘】联动逻辑
+                else if (menuLvl1Val === '今日' || menuLvl1Val === '早盘') {
+                    
+                    // 1. 今日/早盘的Tab选中高亮状态统一渲染成显眼的淡蓝色背景
+                    document.querySelectorAll('.side-tab').forEach(tab => {
+                        if(tab.innerText.includes(menuLvl1Val)) {
+                            tab.classList.add('active');
+                            tab.style.backgroundColor = '#eaf3ff';
+                            tab.style.color = '#2fa4fe';
+                            tab.style.borderColor = '#2fa4fe';
+                        } else {
+                            tab.classList.remove('active');
+                            tab.style.backgroundColor = '#ffffff';
+                            tab.style.color = '#909399';
+                            tab.style.borderColor = '#e4e7ed';
+                        }
+                    });
+
+                    // 2. 文字精准过滤，隔离“足球”和“美式足球”的高亮关联
+                    allSideItems.forEach(item => { 
+                        const pureItemText = item.innerText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').trim();
+                        if(pureItemText === menuLvl2Val) {
+                            item.classList.add('active'); 
+                        }
+                    });
+                    
+                    if(midTitle) midTitle.innerText = `${menuLvl1Val}(${menuLvl2Val})`;
+                    
+                    // 过滤并展示右下方对应的球种热力图卡片
+                    if(sportContainer) {
+                        const sportIndexMap = {
+                            '足球': 0, '篮球': 1, '电子竞技': 2, '电子篮球': 3, 
+                            '网球': 4, '羽毛球': 5, '乒乓球': 6, '棒球': 7, '板球': 8
+                        };
+                        let targetIndex = sportIndexMap[menuLvl2Val];
+                        if (targetIndex === undefined) targetIndex = 0;
+
+                        const allSportSections = sportContainer.querySelectorAll('.sport-section');
+                        allSportSections.forEach((sec, index) => { 
+                            if (index === targetIndex) sec.style.display = 'block';
+                            else sec.style.display = 'none'; 
+                        });
+                    }
+
+                    // 将筛选项文案变更为【全部、收藏】
+                    if(filterRow2) {
+                        filterRow2.innerHTML = `
+                            <span class="pill"><span class="icon">🌐</span> 全部</span>
+                            <span class="pill"><span class="icon">⭐</span> 收藏</span>
+                        `;
+                        filterRow2.style.display = 'flex';
+                    }
+
+                    // 区分“今日”与“早盘”的动态排版视图
+                    if (menuLvl1Val === '今日') {
+                        // 下方蓝底标题固定显示为“滚球盘”
+                        const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                        if(headerBlueTitle) headerBlueTitle.innerText = '滚球盘';
+
+                        if(filterRow2) {
+                            const oddsBoostHTML = `
+                            <div id="dynamicOddsBoost" style="background: #ffffff; padding: 16px 12px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #e4e7ed;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div style="font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 6px; color: #303133;">
+                                        <span style="color: #fff; background: #3b82f6; border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; font-weight:bold;">↑</span> 赔率增值
+                                    </div>
+                                    <button class="action-btn" style="border-radius: 14px; display: flex; align-items: center; gap: 4px; background: #eaf3ff; color: #3b82f6; border: 1px solid #b3d8ff; padding: 4px 12px;">
+                                        <span style="color: #fff; background: #3b82f6; border-radius: 50%; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1;">↑</span> 全部增值
+                                    </button>
+                                </div>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 4px;">
+                                    ${[1,2,3,4,5,6].map(i => `
+                                    <div class="odds-card" style="width: 220px; box-sizing: border-box; background: #eef2f6; border-radius: 6px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 20px; position: relative;">
+                                        <div style="font-size: 14px; font-weight: bold; color: #303133;">增值赔率卡片${i}#</div>
+                                        <div style="display: flex; gap: 8px; width: 100%;">
+                                            <button class="odds-btn action-btn" style="flex:1; padding: 6px 0; background: #dcdfe6; border: none; border-radius: 4px; color: #606266; font-size: 12px; cursor:pointer; font-weight:500; position: relative; overflow: hidden;">赛事详情</button>
+                                            <button class="odds-btn action-btn" style="flex:1; padding: 6px 0; background: #dcdfe6; border: none; border-radius: 4px; color: #606266; font-size: 12px; cursor:pointer; font-weight:500; position: relative; overflow: hidden;">投注入口</button>
+                                        </div>
+                                    </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            `;
+                            filterRow2.insertAdjacentHTML('beforebegin', oddsBoostHTML);
+                        }
+
+                        // 将交互绑定到卡片内部的“赛事详情”和“投注入口”按钮上
+                        document.querySelectorAll('.odds-btn').forEach((el, index) => {
+                            let p = Math.floor(Math.random() * 40) + 10; 
+                            el.setAttribute('data-percent', p + '%');
+                            
+                            el.addEventListener('mouseenter', function(e) {
+                                clearTimeout(hoverTimer);
+                                hoverTimer = setTimeout(() => {
+                                    const activeTimeBtn = document.querySelector('.time-group .grid-btn.active');
+                                    let timeText = activeTimeBtn ? activeTimeBtn.innerText : '2026/05/25-2026/05/31';
+                                    
+                                    let dateRangeStr = '';
+                                    if(timeText === '今日') dateRangeStr = '2026/05/25';
+                                    else if(timeText === '昨日') dateRangeStr = '2026/05/24';
+                                    else if(timeText === '近7天') dateRangeStr = '2026/05/19-2026/05/25';
+                                    else { dateRangeStr = timeText; }
+                                    
+                                    document.getElementById('ttPeriodLabel').innerText = dateRangeStr;
+                                    
+                                    const text = this.innerText.trim() || '功能按钮';
+                                    const percentStr = this.getAttribute('data-percent') || '0%';
+                                    const percentNum = parseInt(percentStr);
+                                    
+                                    document.getElementById('ttTitle').innerText = text.substring(0, 12);
+                                    document.getElementById('ttToday').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                                    document.getElementById('ttYest').innerText = (Math.floor(Math.random() * 5000) + 1000).toLocaleString();
+                                    document.getElementById('ttPeriod').innerText = (Math.floor(Math.random() * 20000) + 5000).toLocaleString();
+                                    
+                                    const badge = document.getElementById('ttBadge');
+                                    const progress = document.getElementById('ttProgress');
+                                    progress.style.width = percentStr;
+                                    
+                                    let levelStr = '低';
+                                    badge.className = 'tt-badge blue';
+                                    progress.style.background = '#3e88ff';
+                                    if (percentNum > 50) { levelStr = '高'; badge.className = 'tt-badge red'; progress.style.background = '#ff5b69'; }
+                                    else if (percentNum >= 10) { levelStr = '中'; badge.className = 'tt-badge orange'; progress.style.background = '#ffaa33'; }
+                                    
+                                    badge.innerText = levelStr + '热区';
+                                    document.getElementById('ttSummaryText').innerText = `本区域为${levelStr}热度区域，点击量占比 ${percentStr}。`;
+
+                                    const boxWidth = 800; const boxHeight = 560; 
+                                    let leftPos = e.pageX + 15;
+                                    let topPos = e.pageY + 15;
+                                    if(leftPos + boxWidth > window.innerWidth) leftPos = window.innerWidth - boxWidth - 10;
+                                    if(topPos + boxHeight > window.innerHeight) topPos = window.innerHeight - boxHeight - 10;
+                                    
+                                    const tooltipEl = document.getElementById('heatmapTooltip');
+                                    tooltipEl.style.left = leftPos + 'px';
+                                    tooltipEl.style.top = topPos + 'px';
+                                    tooltipEl.classList.add('show');
+                                    
+                                    if (typeof renderChart === 'function') {
+                                        renderChart(currentChartDays, currentChartMetric);
+                                    }
+                                }, 2000);
+                            });
+                            
+                            el.addEventListener('mouseleave', function() {
+                                clearTimeout(hoverTimer);
+                            });
+                        });
+                    } 
+                    else if (menuLvl1Val === '早盘') {
+                        // 下方蓝底标题固定显示为“未开赛”
+                        const headerBlueTitle = document.querySelector('.header-blue-row .blue-title');
+                        if(headerBlueTitle) headerBlueTitle.innerText = '未开赛';
+
+                        // 隐藏赔率增值模块，并在【全部、收藏】正下方动态展示平铺的日期过滤行
+                        if(filterRow2) {
+                            const dateRowHTML = `
+                            <div id="dynamicDateRow" class="mid-row filter-row-2" style="padding-top: 4px; border-bottom: none; display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span class="pill">联赛展开</span>
+                                <span class="pill">联赛收起</span>
+                                <span class="pill">所有日期</span>
+                                <span class="pill">日期1#</span>
+                                <span class="pill">日期2#</span>
+                                <span class="pill">日期3#</span>
+                                <span class="pill">日期4#</span>
+                                <span class="pill">日期5#</span>
+                                <span class="pill">日期6#</span>
+                                <span class="pill">日期7#</span>
+                                <span class="pill">日期8#</span>
+                                <span class="pill">日期9#</span>
+                                <span class="pill">日期10#</span>
+                                <span class="pill">其它日期</span>
+                            </div>
+                            `;
+                            filterRow2.insertAdjacentHTML('afterend', dateRowHTML);
+                        }
+                    }
+                }
+                
+                // 3. 关键补丁：在全新HTML结构替换进入后，重新触发热力图色彩动效层和悬停弹窗机制
+                attachHeatEventsToMakeTooltipWork();
+                
+                // 4. 关闭抽屉
                 closeAll();
             });
+
+            // 快捷代理连接器
+            window.attachHeatEventsToMakeTooltipWork = attachHeatEventsToNewElements;
             document.getElementById('applyFilters').click();
             closeAll();
 
